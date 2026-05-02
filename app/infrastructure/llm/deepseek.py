@@ -1,4 +1,4 @@
-"""DeepSeek LLM Provider"""
+"""DeepSeek LLM Provider (默认)"""
 from langchain_openai import ChatOpenAI
 
 from app.core.config import settings
@@ -9,9 +9,9 @@ from app.infrastructure.llm.openai import OpenAIProvider
 class DeepSeekProvider(OpenAIProvider):
     def __init__(self):
         super().__init__(
-            api_key=settings.LLM_API_KEY_BACKUP.get_secret_value() or settings.LLM_API_KEY.get_secret_value(),
-            api_base=settings.LLM_API_BASE_BACKUP,
-            model=settings.LLM_MODEL_BACKUP,
+            api_key=settings.LLM_API_KEY.get_secret_value(),
+            api_base=settings.LLM_API_BASE,
+            model=settings.LLM_MODEL,
         )
 
 

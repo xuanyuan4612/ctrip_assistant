@@ -1,4 +1,4 @@
-"""OpenAI LLM Provider"""
+"""OpenAI-compatible LLM Provider (used as fallback)"""
 from langchain_core.language_models import BaseChatModel
 from langchain_core.embeddings import Embeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -9,9 +9,9 @@ from app.infrastructure.llm.base import AbstractLLMProvider, LLMProviderFactory
 
 class OpenAIProvider(AbstractLLMProvider):
     def __init__(self, api_key: str = None, api_base: str = None, model: str = None):
-        self.api_key = api_key or settings.LLM_API_KEY.get_secret_value()
-        self.api_base = api_base or settings.LLM_API_BASE
-        self.model = model or settings.LLM_MODEL
+        self.api_key = api_key or settings.LLM_API_KEY_BACKUP.get_secret_value() or settings.LLM_API_KEY.get_secret_value()
+        self.api_base = api_base or settings.LLM_API_BASE_BACKUP
+        self.model = model or settings.LLM_MODEL_BACKUP
 
     def get_chat_model(self, **kwargs) -> BaseChatModel:
         return ChatOpenAI(

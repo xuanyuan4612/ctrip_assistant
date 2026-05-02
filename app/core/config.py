@@ -35,28 +35,28 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = ["http://localhost:8080"]
 
     # ── LLM ──
-    LLM_PROVIDER: str = "openai"
-    LLM_MODEL: str = "gpt-4o"
+    LLM_PROVIDER: str = "deepseek"
+    LLM_MODEL: str = "deepseek-chat"
     LLM_API_KEY: SecretStr = Field(..., description="LLM API key")
-    LLM_API_BASE: str = "https://api.openai.com/v1"
+    LLM_API_BASE: str = "https://api.deepseek.com/v1"
     LLM_TEMPERATURE: float = 0.8
     LLM_MAX_RETRIES: int = 3
     LLM_TIMEOUT: int = 60
 
     # ── LLM - 备选 Provider ──
-    LLM_PROVIDER_BACKUP: str = "deepseek"
-    LLM_MODEL_BACKUP: str = "deepseek-chat"
+    LLM_PROVIDER_BACKUP: str = "openai"
+    LLM_MODEL_BACKUP: str = "gpt-4o"
     LLM_API_KEY_BACKUP: SecretStr = Field(default=SecretStr(""), description="Backup LLM API key")
-    LLM_API_BASE_BACKUP: str = "https://api.deepseek.com/v1"
+    LLM_API_BASE_BACKUP: str = "https://api.openai.com/v1"
 
     # ── 意图分类器 (低成本模型) ──
-    CLASSIFIER_MODEL: str = "gpt-4o-mini"
+    CLASSIFIER_MODEL: str = "deepseek-chat"
     CLASSIFIER_TEMPERATURE: float = 0.0
     CLASSIFIER_CONFIDENCE_THRESHOLD: float = 0.85
 
     # ── Embedding ──
     EMBEDDING_API_KEY: SecretStr = Field(default=SecretStr(""), description="Embedding API key")
-    EMBEDDING_API_BASE: str = "https://api.openai.com/v1"
+    EMBEDDING_API_BASE: str = "https://api.deepseek.com/v1"
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     EMBEDDING_DIMENSIONS: int = 768
 
