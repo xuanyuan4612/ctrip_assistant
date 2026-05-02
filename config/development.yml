@@ -1,0 +1,87 @@
+LOG_LEVEL: INFO
+HOST: 127.0.0.1
+PORT: 8000
+ORIGINS: ['http://localhost:8080', 'http://127.0.0.1:8080', 'http://192.0.0.136:8080']
+DATABASE:
+  DRIVER: mysql
+  NAME: test_db4
+  HOST: 127.0.0.1
+  PORT: 3306
+  USERNAME: root
+  PASSWORD: 123123
+  QUERY:
+    charset: utf8mb4
+
+JWT_SECRET_KEY: 09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+ALGORITHM: HS256
+ACCESS_TOKEN_EXPIRE_MINUTES: 30
+
+WHITE_LIST: ['/api/login', '/api/register', '/static', '/docs', '/swagger', '/openapi', '/api/auth']
+
+DEFAULT_PASSWORD: 123123
+
+# ============================================================
+# RAG 检索增强生成配置
+# ============================================================
+RAG:
+  # --- 向量存储 ---
+  VECTOR_STORE:
+    PROVIDER: qdrant            # qdrant | chroma | pgvector | memory (开发用)
+    QDRANT:
+      HOST: localhost
+      PORT: 6333
+      GRPC_PORT: 6334
+      COLLECTION: travel_faq    # 集合名称
+      PREFER_GRPC: false        # 是否优先使用 gRPC
+      TIMEOUT: 30               # 连接超时秒数
+
+  # --- 嵌入模型 ---
+  EMBEDDING:
+    PROVIDER: openai            # openai | bge | dmeta | jina
+    OPENAI:
+      MODEL: text-embedding-3-small
+      DIMENSIONS: 768           # 降维到 768（默认 1536），节省存储
+      API_KEY: ""               # 从环境变量 OPENAI_API_KEY 读取
+      API_BASE: ""              # 自建代理地址（可选）
+    BGE:
+      MODEL: BAAI/bge-large-zh-v1.5
+      DEVICE: cpu               # cpu | cuda
+      NORMALIZE: true
+
+  # --- 文本分块 ---
+  CHUNKING:
+    CHUNK_SIZE: 512
+    CHUNK_OVERLAP: 100
+    SEPARATORS:
+      - "\n\n"
+      - "\n"
+      - "."
+      - "!"
+      - "?"
+      - ";"
+      - ","
+      - " "
+      - ""
+
+  # --- 检索参数 ---
+  RETRIEVAL:
+    TOP_K: 5                     # 初始检索返回条数
+    SCORE_THRESHOLD: 0.0         # 相似度阈值（0.0 表示不限制）
+    USE_MMR: false               # 是否使用最大边际相关性（增加多样性）
+    MMR_LAMBDA: 0.5              # MMR 多样性-相关性平衡
+
+  # --- 重排序（可选，文档量 > 500 分块时启用） ---
+  RERANK:
+    ENABLED: false               # 当前阶段不需要
+    PROVIDER: cohere             # cohere | bge_cross_encoder
+    TOP_N: 5                     # 重排序后保留的条数
+    COHERE:
+      MODEL: rerank-multilingual-v3.0
+    BGE:
+      MODEL: BAAI/bge-reranker-v2-m3
+
+  # --- 数据源配置 ---
+  SOURCES:
+    FAQ_PATH: order_faq.md       # 相对于项目根目录
+    RECORD_DB: sqlite:///data/rag_index.db  # SQLRecordManager 路径
+    INDEX_BATCH_SIZE: 200         # 索引批次大小（参考 bug: 应 > 总文档数 或保持所有同源文档同批次）

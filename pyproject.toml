@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "ctrip-assistant"
+version = "1.0.0"
+description = "携程 AI 助手 - 多智能体旅行服务系统"
+authors = ["Ctrip AI Team"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.115"
+uvicorn = {extras = ["standard"], version = "^0.34"}
+starlette = "^0.46"
+pydantic = "^2.0"
+pydantic-settings = "^2.0"
+sqlalchemy = "^2.0"
+mysqlclient = "^2.2"
+aiomysql = "^0.2"
+python-jose = {extras = ["cryptography"], version = "^3.4"}
+passlib = {extras = ["bcrypt"], version = "^1.7"}
+bcrypt = "^4.0"
+redis = "^5.0"
+slowapi = "^0.1"
+langchain = "^0.3"
+langchain-core = "^0.3"
+langchain-openai = "^0.3"
+langchain-text-splitters = "^0.3"
+langgraph = "^0.2"
+langgraph-checkpoint = "^2.0"
+prometheus-fastapi-instrumentator = "^7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
