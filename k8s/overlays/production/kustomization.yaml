@@ -1,0 +1,25 @@
+﻿# =============================================================================
+# Kustomization: Production overlay
+# Patches the base for the production environment.
+#   - Full replicas (3 backend, 2 frontend)
+#   - Production hostname with TLS
+#   - Higher resource requests for production workloads
+# =============================================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ctrip-assistant
+
+resources:
+  - ../../base
+
+patches:
+  - path: replicas-patch.yaml
+  - path: ingress-patch.yaml
+  - path: resources-patch.yaml
+
+images:
+  - name: ctrip/app
+    newTag: production-latest
+  - name: ctrip/frontend
+    newTag: production-latest

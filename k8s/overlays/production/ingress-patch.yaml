@@ -1,0 +1,31 @@
+﻿# =============================================================================
+# Patch: Set production hostname with TLS.
+# Assumes a TLS secret named "ctrip-tls" exists in the namespace.
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ctrip-assistant-ingress
+spec:
+  tls:
+    - hosts:
+        - assistant.ctrip.com
+      secretName: ctrip-tls
+  rules:
+    - host: assistant.ctrip.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ctrip-frontend
+                port:
+                  number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: ctrip-app-backend
+                port:
+                  number: 8000

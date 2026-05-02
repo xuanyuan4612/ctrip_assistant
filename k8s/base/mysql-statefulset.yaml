@@ -1,0 +1,98 @@
+﻿# =============================================================================
+# StatefulSet: mysql
+# Single-instance MySQL 8.0 with persistent storage.
+#
+# NOTE: This is a single-replica setup suitable for cost-efficiency in
+# staging and moderate production loads. For production High-Availability:
+#   - Add a second replica with MySQL Group Replication / InnoDB Cluster
+#   - Use Orchestrator or ProxySQL for automated failover
+#   - Consider a managed DBaaS (AWS RDS, GCP CloudSQL, etc.) for zero ops
+# =============================================================================
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  namespace: ctrip-assistant
+  labels:
+    app.kubernetes.io/name: ctrip-assistant
+    app.kubernetes.io/component: database
+    app.kubernetes.io/version: "8.0"
+spec:
+  serviceName: mysql-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ctrip-assistant
+      app.kubernetes.io/component: database
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ctrip-assistant
+        app.kubernetes.io/component: database
+        app.kubernetes.io/version: "8.0"
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: mysql
+              containerPort: 3306
+              protocol: TCP
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ctrip-assistant-secret
+                  key: MYSQL_ROOT_PASSWORD
+            - name: MYSQL_DATABASE
+              value: "ctrip_assistant"
+            - name: MYSQL_USER
+              value: "ctrip"
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ctrip-assistant-secret
+                  key: DATABASE_URL
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 2
+              memory: 4Gi
+          # --- Liveness & Readiness ---
+          livenessProbe:
+            exec:
+              command:
+                - mysqladmin
+                - ping
+                - -uroot
+                - -p$(MYSQL_ROOT_PASSWORD)
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - mysql
+                - -uroot
+                - -p$(MYSQL_ROOT_PASSWORD)
+                - -e
+                - "SELECT 1"
+            initialDelaySeconds: 30
+            periodSeconds: 5
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          app.kubernetes.io/name: ctrip-assistant
+          app.kubernetes.io/component: database
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 50Gi

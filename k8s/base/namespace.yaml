@@ -1,0 +1,12 @@
+﻿# =============================================================================
+# Namespace: ctrip-assistant
+# Isolates all resources for the Ctrip Assistant travel application.
+# =============================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ctrip-assistant
+  labels:
+    app.kubernetes.io/name: ctrip-assistant
+    app.kubernetes.io/part-of: ctrip-assistant
+    app.kubernetes.io/managed-by: kustomize

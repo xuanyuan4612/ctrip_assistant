@@ -1,0 +1,51 @@
+﻿# =============================================================================
+# Ingress: ctrip-assistant-ingress
+# NGINX Ingress Controller routing:
+#   /    → Frontend (static Vue 3 SPA served by Nginx)
+#   /api → Backend (FastAPI with SSE streaming support)
+#
+# SSE streaming requires proxy-buffering OFF and extended timeouts.
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ctrip-assistant-ingress
+  namespace: ctrip-assistant
+  labels:
+    app.kubernetes.io/name: ctrip-assistant
+    app.kubernetes.io/component: ingress
+  annotations:
+    # --- SSE Streaming Support ---
+    # Disable proxy buffering so SSE messages are streamed immediately
+    # to the client without being buffered by nginx.
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+
+    # Increase proxy read timeout for long-running SSE connections.
+    # The chat agent may take minutes to stream tokens.
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+
+    # Additional recommended settings for long-lived connections:
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: placeholder.ctrip.com
+      http:
+        paths:
+          # Frontend: Vue 3 SPA (all non-/api routes)
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ctrip-frontend
+                port:
+                  number: 80
+          # Backend API: FastAPI
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: ctrip-app-backend
+                port:
+                  number: 8000

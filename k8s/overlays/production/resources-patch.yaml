@@ -1,0 +1,37 @@
+﻿# =============================================================================
+# Patch: Higher resource requests for production.
+# Backend pods need guaranteed CPU/memory for stable LLM agent performance.
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ctrip-app-backend
+spec:
+  template:
+    spec:
+      containers:
+        - name: app
+          resources:
+            requests:
+              cpu: 1
+              memory: 1Gi
+            limits:
+              cpu: 2
+              memory: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ctrip-frontend
+spec:
+  template:
+    spec:
+      containers:
+        - name: frontend
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

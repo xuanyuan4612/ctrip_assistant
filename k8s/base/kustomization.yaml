@@ -1,0 +1,28 @@
+﻿# =============================================================================
+# Kustomization: Base
+# Central composition file for all base Kubernetes resources.
+# Overlays (staging / production) reference and patch this base.
+# =============================================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ctrip-assistant
+
+commonLabels:
+  app.kubernetes.io/name: ctrip-assistant
+  app.kubernetes.io/managed-by: kustomize
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - app-deployment.yaml
+  - app-service.yaml
+  - app-hpa.yaml
+  - frontend-deployment.yaml
+  - frontend-service.yaml
+  - mysql-statefulset.yaml
+  - mysql-service.yaml
+  - redis-deployment.yaml
+  - redis-service.yaml
+  - ingress.yaml

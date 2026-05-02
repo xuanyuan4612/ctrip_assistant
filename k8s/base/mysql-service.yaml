@@ -1,0 +1,24 @@
+﻿# =============================================================================
+# Service: mysql-headless
+# Headless service for MySQL StatefulSet.  Enables stable DNS-based pod
+# discovery (mysql-0.mysql-headless).  Required by StatefulSet.
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-headless
+  namespace: ctrip-assistant
+  labels:
+    app.kubernetes.io/name: ctrip-assistant
+    app.kubernetes.io/component: database
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless
+  selector:
+    app.kubernetes.io/name: ctrip-assistant
+    app.kubernetes.io/component: database
+  ports:
+    - name: mysql
+      port: 3306
+      targetPort: mysql
+      protocol: TCP

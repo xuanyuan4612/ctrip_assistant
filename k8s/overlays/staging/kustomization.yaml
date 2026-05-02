@@ -1,0 +1,23 @@
+﻿# =============================================================================
+# Kustomization: Staging overlay
+# Patches the base for the staging environment.
+#   - Single replicas for cost savings
+#   - Staging hostname
+# =============================================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ctrip-assistant
+
+resources:
+  - ../../base
+
+patches:
+  - path: replicas-patch.yaml
+  - path: ingress-patch.yaml
+
+images:
+  - name: ctrip/app
+    newTag: staging-latest
+  - name: ctrip/frontend
+    newTag: staging-latest

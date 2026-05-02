@@ -1,0 +1,93 @@
+﻿# =============================================================================
+# Deployment: ctrip-app-backend
+# FastAPI application server exposing the REST API and SSE chat endpoint.
+# Runs LangGraph agents for the multi-agent travel assistant.
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ctrip-app-backend
+  namespace: ctrip-assistant
+  labels:
+    app.kubernetes.io/name: ctrip-assistant
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/version: latest
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ctrip-assistant
+      app.kubernetes.io/component: backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ctrip-assistant
+        app.kubernetes.io/component: backend
+        app.kubernetes.io/version: latest
+    spec:
+      # Preferred pod anti-affinity: spread backend pods across different nodes
+      # when possible to improve availability during rolling updates.
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/component
+                      operator: In
+                      values:
+                        - backend
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: app
+          image: ctrip/app:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          # Environment from ConfigMap (non-sensitive) + Secret (sensitive)
+          envFrom:
+            - configMapRef:
+                name: ctrip-assistant-config
+            - secretRef:
+                name: ctrip-assistant-secret
+          # --- Liveness Probe ---
+          # Detects application deadlock / hang.  Give the app time to start
+          # (LangGraph agent initialization may take a moment on first boot).
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          # --- Readiness Probe ---
+          # Ensures traffic only reaches pods that can serve requests.
+          # Shorter initial delay so the pod appears ready ASAP.
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 2
+          # --- Resource Limits & Requests ---
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 2
+              memory: 2Gi
+      # Graceful shutdown: give in-flight SSE requests time to finish.
+      terminationGracePeriodSeconds: 60

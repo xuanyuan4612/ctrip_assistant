@@ -1,0 +1,23 @@
+﻿# =============================================================================
+# Service: ctrip-app-backend
+# Cluster-internal service exposing the FastAPI backend on port 8000.
+# Frontend Nginx pods and Ingress route traffic through this service.
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: ctrip-app-backend
+  namespace: ctrip-assistant
+  labels:
+    app.kubernetes.io/name: ctrip-assistant
+    app.kubernetes.io/component: backend
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: ctrip-assistant
+    app.kubernetes.io/component: backend
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+      protocol: TCP

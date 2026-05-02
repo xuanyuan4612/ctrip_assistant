@@ -1,0 +1,26 @@
+﻿# =============================================================================
+# Patch: Set production replicas.
+#   Backend: 3 (scales up to 20 via HPA)
+#   Frontend: 2 (static content, less resource intensive)
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ctrip-app-backend
+spec:
+  replicas: 3
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ctrip-frontend
+spec:
+  replicas: 2
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ctrip-app-backend
+spec:
+  minReplicas: 3
+  maxReplicas: 20

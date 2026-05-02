@@ -1,0 +1,32 @@
+﻿# =============================================================================
+# ConfigMap: ctrip-assistant-config
+# Non-sensitive application configuration for the Ctrip Assistant backend.
+# Sensitive values (API keys, DB passwords) are stored in Secrets.
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ctrip-assistant-config
+  namespace: ctrip-assistant
+  labels:
+    app.kubernetes.io/name: ctrip-assistant
+    app.kubernetes.io/component: config
+data:
+  # --- Application ---
+  APP_NAME: "Ctrip Assistant"
+  LOG_LEVEL: "INFO"
+  LOG_FORMAT: "json"
+
+  # --- LLM Provider Configuration ---
+  LLM_PROVIDER: "deepseek"
+  LLM_MODEL: "deepseek-chat"
+  LLM_API_BASE: "https://api.deepseek.com/v1"
+  LLM_TEMPERATURE: "0.7"
+  LLM_MAX_RETRIES: "3"
+  LLM_TIMEOUT: "60"
+
+  # --- Redis ---
+  REDIS_URL: "redis://redis:6379/0"
+
+  # --- CORS ---
+  CORS_ORIGINS: '["http://localhost:5173","http://localhost:8000","https://assistant.ctrip.com","https://staging.ctrip.example.com"]'
