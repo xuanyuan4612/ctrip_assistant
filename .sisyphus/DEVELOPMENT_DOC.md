@@ -2103,9 +2103,9 @@ Traces   → Tempo → Grafana (分布式追踪, OTel)
 
 ---
 
-## 第九部分: 前端架构设计
+# 第九部分: 前端架构设计
 
-### 9.1 技术栈
+## 9.1 技术栈
 
 | 技术 | 版本 | 用途 |
 |------|------|------|
@@ -2119,7 +2119,7 @@ Traces   → Tempo → Grafana (分布式追踪, OTel)
 | Lucide Vue Next | ^0.460 | 图标库 |
 | fetch-event-source | ^2.0 | SSE 流式连接 |
 
-### 9.2 路由设计
+## 9.2 路由设计
 
 ```
 /                  → ChatPage       (需登录)
@@ -2131,7 +2131,7 @@ Traces   → Tempo → Grafana (分布式追踪, OTel)
     /admin/documents   → Documents  (文档管理)
 ```
 
-### 9.3 组件树
+## 9.3 组件树
 
 ```
 App.vue
@@ -2164,7 +2164,7 @@ App.vue
     └── Documents.vue → 上传区 + 文档列表
 ```
 
-### 9.4 状态管理 (Pinia)
+## 9.4 状态管理 (Pinia)
 
 **authStore**:
 ```
@@ -2189,7 +2189,7 @@ newSession()                (新建会话)
 selectSession()             (切换会话)
 ```
 
-### 9.5 数据流
+## 9.5 数据流
 
 ```
 SSE 流式对话:
@@ -2211,7 +2211,7 @@ Session 管理:
   ChatPage beforeMount: 检查 isAuthenticated → 否则 redirect /login
 ```
 
-### 9.6 SSE 流式处理
+## 9.6 SSE 流式处理
 
 ```
 fetch() → ReadableStream reader
@@ -2222,7 +2222,7 @@ fetch() → ReadableStream reader
   → AbortController 支持取消
 ```
 
-### 9.7 预订卡片设计
+## 9.7 预订卡片设计
 
 Agent 返回的预订结果渲染为可视化卡片:
 
@@ -2232,7 +2232,7 @@ Agent 返回的预订结果渲染为可视化卡片:
 
 **CarRentalCard**: 绿色左边框, 汽车图标, 租车公司, 地点, 起止日期
 
-### 9.8 管理后台
+## 9.8 管理后台
 
 **Dashboard**: 5 个统计卡片 (用户数/对话数/Token/费用/日活)
 
@@ -2242,7 +2242,7 @@ Agent 返回的预订结果渲染为可视化卡片:
 
 **Documents**: RAG 文档管理 (上传区/文档列表/状态/操作)
 
-### 9.9 部署
+## 9.9 部署
 
 **开发环境**: Vite dev server (:5173) → proxy /api → FastAPI (:8000)
 
