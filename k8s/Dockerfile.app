@@ -9,25 +9,15 @@
 # ---- Build Stage ----
 FROM python:3.11-slim AS builder
 
-# Install system build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Poetry
-ENV POETRY_VERSION=1.8.3 \
-    POETRY_HOME=/opt/poetry \
-    POETRY_VIRTUALENVS_IN_PROJECT=true \
-    POETRY_NO_INTERACTION=1
-RUN pip install --no-cache-dir "poetry==$POETRY_VERSION"
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 # Copy dependency manifest
 WORKDIR /build
-COPY pyproject.toml poetry.lock* ./
+COPY pyproject.toml ./
 
-# Install production dependencies only (no dev)
-RUN poetry install --only main --no-root --no-interaction
+# Install production dependencies only
+RUN uv sync --no-dev --frozen
 
 # ---- Run Stage ----
 FROM python:3.11-slim AS runner
@@ -35,7 +25,7 @@ FROM python:3.11-slim AS runner
 # Create non-root user
 RUN groupadd -r ctrip && useradd -r -g ctrip -d /app -s /sbin/nologin ctrip
 
-# Install runtime system dependencies (e.g., mysql client for migrations)
+# Install runtime system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     default-mysql-client \

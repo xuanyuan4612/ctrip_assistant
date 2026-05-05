@@ -1,7 +1,10 @@
 .PHONY: dev test build up down migrate clean fe-dev fe-build
 
 dev:
-	uvicorn app.main:create_app --reload --host 0.0.0.0 --port 8000 --factory
+	uv run uvicorn app.main:create_app --reload --host 0.0.0.0 --port 8000 --factory
+
+install:
+	uv sync
 
 test:
 	pytest tests/ -v --cov=app --cov-report=term
@@ -16,7 +19,7 @@ down:
 	docker compose -f docker/docker-compose.yml down
 
 migrate:
-	alembic upgrade head
+	alembic -c migrations/alembic.ini upgrade head
 
 fe-dev:
 	cd frontend && npm run dev
