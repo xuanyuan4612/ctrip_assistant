@@ -15,7 +15,8 @@
 │  │ REST+SSE│ │ 1+4 Agent │ │ 成本/决策/反馈      │   │
 │  └─────────┘ └──────────┘ └────────────────────┘   │
 ├─────────────────────────────────────────────────────┤
-│  MySQL (业务数据)  PostgreSQL (Agent 记忆)  Redis    │
+│  MySQL (用户认证)  SQLite (业务数据)  Redis (缓存)    │
+│  PostgreSQL (Agent 记忆, Phase 4 未启用)              │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -35,6 +36,9 @@ ctrip_assistant/
 │   │   └── routing.py       # 路由逻辑
 │   ├── db/                  # 数据访问层 (Repository 模式)
 │   └── governance/          # 治理层
+├── config/                 # Dynaconf 配置 (db/、tools/ 使用)
+├── db/                     # 数据库模型 (MySQL, 同步)
+├── tools/                  # 业务工具 (SQLite, 独立模块)
 ├── frontend/               # 前端 (Vue 3 + TypeScript)
 │   └── src/
 │       ├── pages/           # ChatPage / LoginPage / AdminPage
@@ -42,11 +46,12 @@ ctrip_assistant/
 │       ├── stores/          # Pinia 状态管理
 │       ├── api/             # API 客户端 (SSE 支持)
 │       └── router/          # 路由守卫
-├── migrations/             # Alembic 数据库迁移
+├── migrations/             # Alembic 数据库迁移 (含 alembic.ini)
 ├── tests/                  # 单元测试 + 集成测试
-├── docker/                 # Docker 部署配置
-├── data/                   # 静态数据 (FAQ, SQLite)
-└── .sisyphus/              # 架构设计文档
+├── docker/                 # Docker Compose 部署配置
+├── k8s/                    # Kubernetes 部署配置 (生产集群)
+├── .sisyphus/              # 架构设计文档
+└── scripts/                # 运维脚本
 ```
 
 ## 快速开始
@@ -57,7 +62,7 @@ ctrip_assistant/
 |------|------|------|
 | Python | 3.11+ | 后端运行时 |
 | Node.js | 20+ | 前端构建 |
-| Poetry | 最新 | Python 依赖管理 |
+| uv | 最新 | Python 包管理 |
 | Docker + Compose | 最新 | 生产部署 |
 | MySQL | 8.0 | 业务数据存储 |
 
@@ -79,7 +84,7 @@ cp .env.example .env
 
 ```bash
 # 后端
-poetry install
+uv sync
 
 # 前端
 cd frontend && npm install && cd ..
@@ -89,7 +94,7 @@ cd frontend && npm install && cd ..
 
 ```bash
 # 确保 MySQL 运行中，然后执行迁移
-alembic upgrade head
+alembic -c migrations/alembic.ini upgrade head
 ```
 
 ### 4. 启动开发服务器
@@ -221,11 +226,11 @@ pytest tests/integration/ -v
 | Agent 框架 | LangGraph (StateGraph) |
 | LLM | OpenAI / DeepSeek |
 | 前端 | Vue 3 + TypeScript + Tailwind CSS |
-| 业务数据库 | MySQL 8.0 |
-| Agent 记忆 | PostgreSQL 16 |
+| 业务数据库 | MySQL 8.0 (用户) + SQLite (旅行数据) |
+| Agent 记忆 | MemorySaver (内存, PostgreSQL 16 Phase 4 启用) |
 | 缓存 | Redis 7 |
 | 向量存储 | Qdrant (预留) |
-| 部署 | Docker Compose + Nginx |
+| 部署 | Docker Compose + Nginx / K8s |
 | 监控 | Prometheus + Grafana (预留) |
 
 ---
@@ -248,25 +253,12 @@ pytest tests/integration/ -v
 # 1. 确保 Python 3.11+ 和 Node.js 20+ 已安装
 
 # 2. 安装依赖
-poetry install
+```bash
+# 后端 (uv)
+uv sync
+
+# 前端
 cd frontend && npm install && cd ..
-
-# 3. 配置 .env
-cp .env.example .env
-# 编辑 .env，至少填入 LLM_API_KEY 和 JWT_SECRET_KEY
-
-# 4. 启动 MySQL (Docker)
-docker run -d --name mysql-dev \
-  -e MYSQL_ROOT_PASSWORD=root123 \
-  -e MYSQL_DATABASE=ctrip_assistant \
-  -p 3306:3306 mysql:8.0
-
-# 5. 数据库迁移
-alembic upgrade head
-
-# 6. 启动服务
-make dev     # 后端 :8000
-make fe-dev  # 前端 :5173
 ```
 
 ### 环境二: Docker Compose 单机部署
