@@ -12,9 +12,15 @@ from langchain_core.runnables import RunnableConfig
 
 from app.graph.agents.base import BaseAgent, GuardrailResult
 from app.graph.agents.prompts.flight import flight_booking_prompt
-from graph_chat.base_data_model import CompleteOrEscalate
-from graph_chat.llm_tavily import llm
-from tools.flights_tools import search_flights, update_ticket_to_new_flight, cancel_ticket
+from app.graph.models import CompleteOrEscalate
+from app.graph.tools.business.flights import search_flights, update_ticket_to_new_flight, cancel_ticket
+from app.infrastructure.llm.base import LLMProviderFactory
+from app.infrastructure.llm import deepseek as _  # ensure DeepSeekProvider is registered
+from app.core.config import settings
+
+logger = logging.getLogger(__name__)
+
+llm = LLMProviderFactory.create(settings.LLM_PROVIDER).get_chat_model()
 
 logger = logging.getLogger(__name__)
 

@@ -18,15 +18,22 @@ from app.graph.agents.base import BaseAgent, GuardrailResult
 from app.graph.agents.classifier import IntentClassifier
 from app.graph.agents.prompts.primary import primary_assistant_prompt
 from app.graph.agents.router import default_router, ModelRouter
-from graph_chat.base_data_model import (
+from app.graph.models import (
     ToFlightBookingAssistant,
     ToBookCarRental,
     ToHotelBookingAssistant,
     ToBookExcursion,
 )
-from graph_chat.llm_tavily import tavily_tool, llm
-from tools.flights_tools import search_flights
-from tools.retriever_vector import lookup_policy
+from app.graph.tools.business.flights import search_flights
+from app.graph.tools.knowledge.policy import lookup_policy
+from app.graph.tools.system.tavily_search import tavily_tool
+from app.infrastructure.llm.base import LLMProviderFactory
+from app.infrastructure.llm import deepseek as _
+from app.core.config import settings
+
+logger = logging.getLogger(__name__)
+
+llm = LLMProviderFactory.create(settings.LLM_PROVIDER).get_chat_model()
 
 logger = logging.getLogger(__name__)
 

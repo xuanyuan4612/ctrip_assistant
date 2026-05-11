@@ -18,14 +18,12 @@
 
 **字段名不同**：Dynaconf 是 `settings.DATABASE.DRIVER`，pydantic-settings 是 `settings.DATABASE_URL`。
 
-## 关键运行时问题
+## LLM / Agent 初始化
 
-⚠️ **`app/graph/agents/*.py` 文件中 import 了不存在的模块**：
-```python
-from graph_chat.llm_tavily import tavily_tool, llm  # graph_chat/ 目录不存在
-from graph_chat.base_data_model import ...            # 同样不存在
-```
-受影响的文件：`primary.py`, `flight.py`, `hotel.py`, `car_rental.py`, `excursion.py`。运行任何 agent 相关代码前需先解决。
+- LLM 实例通过 `LLMProviderFactory.create(settings.LLM_PROVIDER).get_chat_model()` 获取
+- 必须导入 `app.infrastructure.llm.deepseek`（触发注册），否则 factory 列表为空
+- Agent 路由模型（`ToFlightBookingAssistant` 等）位于 `app/graph/models.py`，**不在**已删除的 `graph_chat/` 目录中
+- 新工具层位于 `app/graph/tools/business/`，支持 `ToolRuntime` 注入身份和审计
 
 ## 数据库
 
