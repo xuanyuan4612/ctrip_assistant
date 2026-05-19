@@ -1,9 +1,9 @@
 # 携程 AI 助手 — 生产级开发文档
 
-> **版本**: v2.1 (增强多 Agent 架构)  
-> **日期**: 2026-04-28  
-> **文档范围**: 完整生产级架构 —— 从应用代码到基础设施、从 Agent 治理到决策智能、从非功能需求到迁移路线图  
-> **设计原则**: 架构先行 · 分层清晰 · 决策可追溯 · 故障可降级 · 知识可治理  
+> **版本**: v3.0 (多模态 Agent 架构)  
+> **日期**: 2026-05-19  
+> **文档范围**: 完整生产级多模态架构 —— 从应用代码到基础设施、从 Agent 治理到决策智能、从非功能需求到迁移路线图、从文本对话到视觉/语音多模态交互  
+> **设计原则**: 架构先行 · 分层清晰 · 决策可追溯 · 故障可降级 · 知识可治理 · 模态可插拔  
 
 ---
 
@@ -43,24 +43,41 @@
 - [5.5 Agent 协作模式](#55-agent-协作模式)
 - [5.6 Agent 自检机制](#56-agent-自检机制)
 
-### [第六部分: 非功能性架构](#第六部分非功能性架构)
-- [6.1 SLO 定义](#61-slo-定义)
-- [6.2 故障模式分析 (FMEA)](#62-故障模式分析-fmea)
-- [6.3 容量规划模型](#63-容量规划模型)
-- [6.4 多租户隔离架构](#64-多租户隔离架构)
-- [6.5 数据隐私合规](#65-数据隐私合规)
-- [6.6 用户体验度量](#66-用户体验度量)
+### [第六部分: 多模态能力架构](#第六部分多模态能力架构)
+- [6.0 多模态定位与旅行场景](#60-多模态定位与旅行场景)
+- [6.1 多模态基础设施 (Layer 1)](#61-多模态基础设施-layer-1)
+- [6.2 多模态能力工具 (Layer 2)](#62-多模态能力工具-layer-2)
+- [6.3 多模态 Agent 设计 (Layer 3)](#63-多模态-agent-设计-layer-3)
+- [6.4 多模态编排 (Layer 4)](#64-多模态编排-layer-4)
+- [6.5 多模态 API 层 (Layer 5)](#65-多模态-api-层-layer-5)
+- [6.6 多模态治理与安全 (Layer 6)](#66-多模态治理与安全-layer-6)
+- [6.7 多模态处理管线](#67-多模态处理管线)
+- [6.8 多模态 RAG](#68-多模态-rag)
 
-### [第七部分: 风险治理与迁移路线图](#第七部分风险治理与迁移路线图)
-- [7.1 技术风险登记册](#71-技术风险登记册)
-- [7.2 现状 vs 目标差距矩阵](#72-现状-vs-目标差距矩阵)
-- [7.3 分阶段迁移路线图](#73-分阶段迁移路线图)
+### [第七部分: 非功能性架构](#第七部分非功能性架构)
+- [7.1 SLO 定义](#71-slo-定义)
+- [7.2 故障模式分析 (FMEA)](#72-故障模式分析-fmea)
+- [7.3 容量规划模型](#73-容量规划模型)
+- [7.4 多租户隔离架构](#74-多租户隔离架构)
+- [7.5 数据隐私合规](#75-数据隐私合规)
+- [7.6 用户体验度量](#76-用户体验度量)
+- [7.7 多模态非功能性需求](#77-多模态非功能性需求)
 
-### [第八部分: 部署与运维](#第八部分部署与运维)
-- [8.1 Docker Compose 拓扑](#81-docker-compose-拓扑)
-- [8.2 高可用拓扑](#82-高可用拓扑)
-- [8.3 监控告警体系](#83-监控告警体系)
-- [8.4 测试体系](#84-测试体系)
+### [第八部分: 风险治理与迁移路线图](#第八部分风险治理与迁移路线图)
+- [8.1 技术风险登记册](#81-技术风险登记册)
+- [8.2 现状 vs 目标差距矩阵](#82-现状-vs-目标差距矩阵)
+- [8.3 分阶段迁移路线图](#83-分阶段迁移路线图)
+
+### [第九部分: 部署与运维](#第九部分部署与运维)
+- [9.1 Docker Compose 拓扑](#91-docker-compose-拓扑)
+- [9.2 高可用拓扑](#92-高可用拓扑)
+- [9.3 监控告警体系](#93-监控告警体系)
+- [9.4 测试体系](#94-测试体系)
+
+### [第十部分: 前端多模态架构](#第十部分前端多模态架构)
+- [10.1 多模态 UI 组件](#101-多模态-ui-组件)
+- [10.2 图片上传与预览](#102-图片上传与预览)
+- [10.3 语音输入与输出](#103-语音输入与输出)
 
 ### [附录](#附录)
 - [附录 A: 文件映射表](#附录-a-文件映射表)
@@ -76,12 +93,13 @@
 | 维度 | 说明 |
 |------|------|
 | **名称** | 携程 AI 助手 (Ctrip AI Assistant) |
-| **形态** | 多智能体对话系统 (LangGraph Supervisor 模式) |
-| **入口** | FastAPI REST API (移除 Gradio) |
-| **LLM** | 云端 LLM (OpenAI / DeepSeek)，Provider 抽象层可切换 |
+| **形态** | 多模态多智能体对话系统 (LangGraph Supervisor 模式) |
+| **模态** | 文本 (主要) + 图片 (登机牌/证件/行程单截图) + 语音 (免手操作) |
+| **入口** | FastAPI REST API + WebSocket (语音), Multipart 上传 (图片) |
+| **LLM** | 云端 LLM (OpenAI / DeepSeek) + 视觉 LLM (GPT-4o / Qwen-VL)，Provider 抽象层可切换 |
 | **数据库** | MySQL (业务数据) + PostgreSQL (Agent 记忆) |
 | **用户规模** | 数千认证用户 |
-| **文档规模** | 50TB 混合文档 (PDF / Office / 结构化数据 / 实时流) |
+| **文档规模** | 50TB 混合文档 (PDF / Office / 结构化数据 / 图片 / 实时流) |
 | **部署** | Docker Compose 起步，预留 K8s 迁移路径 |
 
 ## 1.2 现状评估
@@ -227,6 +245,11 @@ ctrip_assistant/
 | ADR-11 | **意图分类替代 LLM 路由 (P0)** | 轻量分类器 (Haiku/Flash, 40ms) 处理 80% 路由 → 延迟 -2~3s，成本 -90% |
 | ADR-12 | **并行 Fan-out 多领域请求 (P1)** | LangGraph Send API → 航班+酒店+租车同时查询 → 延迟 -55% |
 | ADR-13 | **计划-执行分离 (P2)** | 仅 3+ 领域复合任务触发 Planner → 任务完成率 +40-70%，Plan 阶段 ~3000 Token 开销 |
+| ADR-14 | **多模态作为可插拔能力 (P1)** | 当前系统纯文本，多模态通过 Provider 抽象层 + Modality Detector 节点按需激活，不支持模态时自动降级为文本；旅行场景核心模态: 图片 (登机牌/证件/行程单截图)、语音 (免手操作)、视频 (暂不启用) |
+| ADR-15 | **视觉模型: GPT-4V → Qwen-VL 演进 (P1)** | 初期使用 GPT-4o (已有备份模型，支持视觉)；中期迁移至 Qwen-VL-Max (国内部署、成本更低、中文 OCR 更优)；视觉模型仅在检测到图片输入时触发 |
+| ADR-16 | **语音管线: 客户端预处理优先 (P1)** | 语音在客户端完成 VAD (语音活动检测) → 服务端仅接收 Whisper 转写后的文本，同时保留原始音频用于合规审计；TTS 在客户端执行 (Web Speech API / Edge TTS)，减少服务端 GPU 压力 |
+| ADR-17 | **多模态内容安全分层 (P1)** | 输入层: NSFW 检测 + PII 脱敏 (Presidio 扩展至图片) → 护栏层: Llama Guard 多模态版本 → 输出层: 视觉幻觉检测；图片上传即检测，不安全内容拒绝处理 |
+| ADR-18 | **CLIP 多模态嵌入 (P2)** | 50TB 文档中包含大量图片 (PDF 截图、行程单照片等)，启用 CLIP 多模态嵌入实现文搜图 + 图搜图，与文本嵌入并存于 Milvus 不同 Collection
 
 ## 2.2 六层分层架构
 
@@ -547,6 +570,88 @@ Celery + Redis (当前):
 预留: Kafka 升级路径 (当吞吐量超过 Celery 处理能力时)
 ```
 
+### 3.1.7 多模态 LLM Provider 扩展
+
+**设计目标**: 在现有 `AbstractLLMProvider` 接口上扩展多模态能力，支持视觉理解模型。
+
+**接口扩展**:
+```
+AbstractLLMProvider (扩展):
+  ├── get_chat_model() → BaseChatModel         # 文本模型 (不变)
+  ├── get_vision_model() → BaseChatModel       # 视觉模型 (新增)
+  │    配置: vision_model, max_image_size, supported_formats
+  ├── get_embedding_model() → Embeddings       # 文本嵌入 (不变)
+  ├── get_multimodal_embedding() → Embeddings  # 多模态嵌入 (新增, CLIP)
+  └── health_check() → bool
+
+OpenAIProvider:
+  ├── get_chat_model() → ChatOpenAI(model="deepseek-chat")
+  ├── get_vision_model() → ChatOpenAI(model="gpt-4o")  # GPT-4o 支持视觉
+  └── get_multimodal_embedding() → OpenAIEmbeddings(model="clip-vit-large-patch14")
+
+QwenVLProvider (新增):
+  ├── get_chat_model() → ChatOpenAI(model="qwen-vl-max", base_url="...")
+  ├── get_vision_model() → 同上 (Qwen-VL 统一文本+视觉)
+  └── get_multimodal_embedding() → 本地 CLIP 模型或 API
+```
+
+### 3.1.8 语音管线基础设施
+
+```
+客户端 (浏览器/小程序):
+  ├── MediaRecorder API → VAD (语音活动检测) → Opus 编码
+  └── WebSocket → 发送音频流
+
+服务端:
+  ├── Whisper API (OpenAI) 或 faster-whisper (本地 GPU)
+  │   模型: whisper-1 (API) / large-v3 (本地)
+  │   延迟目标: <2s 首 Token
+  └── 输出: {text: str, language: str, segments: [{start, end, text}]}
+
+TTS (客户端优先, 减少服务端负载):
+  ├── 浏览器: Web Speech API (免费, 零延迟)
+  ├── Edge TTS: 微软语音合成 (中文自然度高)
+  └── 服务端备用: OpenAI TTS (tts-1-hd, 仅在客户端不支持时)
+```
+
+### 3.1.9 多模态对象存储 (MinIO)
+
+在现有 MinIO 存储分层基础上扩展多模态 Bucket:
+
+```
+MinIO 多模态 Bucket:
+  ├── images/raw/         # 用户上传原始图片 (30 天后转 WARM)
+  ├── images/processed/   # 压缩/脱敏后的图片 (对话期间 HOT, 30 天后删除)
+  ├── images/thumbnails/  # 缩略图 (HOT, 用于对话列表预览)
+  ├── audio/              # 语音输入原始音频 (7 天后删除, 审计除外)
+  └── multimodal-vectors/ # CLIP 向量快照 (365 天过期)
+
+图片处理管线 (上传时):
+  1. 格式验证 (JPEG/PNG/WebP, 最大 20MB)
+  2. 压缩 (max 2048px 长边, WebP 格式, 质量 85%)
+  3. NSFW 检测 (nudenet / safety-checker)
+  4. PII 检测 (Presidio OCR → 护照/身份证号脱敏)
+  5. 生成缩略图 (256px, 用于对话列表)
+  6. 存入 processed/ bucket, 原始图存入 raw/
+```
+
+### 3.1.10 多模态嵌入服务
+
+```
+CLIP 嵌入服务 (独立 GPU Pod 或 API):
+  模型: ViT-L/14 (OpenAI CLIP) 或 Chinese-CLIP (中文优化)
+  维度: 768 (与 text-embedding-3-small 对齐)
+  用途:
+    ├── 图片语义搜索 (文搜图: "登机牌截图" → 相关图片)
+    ├── 图片去重 (cosine > 0.99 的图片视为重复)
+    └── 图文联合检索 (Milvus 多 Collection 融合)
+
+Milvus 多模态 Collection:
+  ├── text_vectors (Collection): 文本嵌入 (现有, 1-2 亿向量)
+  ├── image_vectors (Collection): 图片 CLIP 嵌入 (新增, 预计 100M 向量)
+  └── 检索融合: text_results + image_results → RRF → Top-K
+```
+
 ---
 
 ## 3.2 Layer 2: 能力层
@@ -611,6 +716,83 @@ def book_hotel(
 | `book_hotel` | 写 | 需 user_id (审计) | |
 | `cancel_hotel` | 写 | 需 user_id (审计) | |
 | `lookup_policy` | 读 | 无 | RAG 检索 |
+| `analyze_image` | 读 | 需 user_id (审计) | 视觉 LLM 理解 |
+| `extract_document_text` | 读 | 无 | OCR 提取 |
+| `parse_boarding_pass` | 读 | 需 passenger_id | 结构化提取登机牌 |
+| `transcribe_audio` | 读 | 需 user_id (审计) | ASR 语音转文字 |
+| `search_multimodal` | 读 | 无 | 多模态 RAG 检索 |
+
+### 3.2.5 多模态工具定义
+
+**图片分析工具**:
+```python
+@tool
+def analyze_image(
+    image_data: str,  # base64 编码的图片
+    query: str,       # 用户关于图片的问题
+    runtime: ToolRuntime[UserContext, State],
+) -> ToolResult:
+    """
+    使用视觉 LLM 分析用户上传的图片。
+    支持: 登机牌、证件照片、行程单截图、错误页面截图、旅游景点照片。
+
+    安全要求:
+      - 上传时已通过 NSFW 检测和 PII 脱敏
+      - 记录审计日志
+    """
+    # 获取视觉模型
+    vision_llm = runtime.context.llm_provider.get_vision_model()
+
+    # 构造多模态消息
+    message = HumanMessage(content=[
+        {"type": "text", "text": query},
+        {"type": "image_url", "image_url": {"url": f"data:image/webp;base64,{image_data}"}},
+    ])
+
+    result = vision_llm.invoke([message])
+    return ToolResult(status="success", data={"analysis": result.content})
+```
+
+**OCR 文档提取工具**:
+```python
+@tool
+def extract_document_text(
+    image_data: str,
+    doc_type: Literal["boarding_pass", "id_card", "itinerary", "generic"] = "generic",
+    runtime: ToolRuntime[UserContext, State],
+) -> ToolResult:
+    """
+    从图片中提取结构化文本。
+    登机牌: 航班号, 日期, 座位号, 登机口
+    身份证: 姓名, 证件号 (脱敏后返回)
+    行程单: 出发/到达, 日期, 航班号
+    """
+    # 根据 doc_type 选择 OCR 策略
+    if doc_type == "boarding_pass":
+        # 使用视觉 LLM + structured output 提取登机牌字段
+        ...
+    elif doc_type == "id_card":
+        # 使用 PaddleOCR + Presidio PII 脱敏
+        ...
+```
+
+**语音转写工具**:
+```python
+@tool
+def transcribe_audio(
+    audio_data: str,  # base64 编码的音频 (Opus/WebM)
+    language: str = "zh",
+    runtime: ToolRuntime[UserContext, State],
+) -> ToolResult:
+    """
+    将语音输入转写为文本。
+    客户端已完成 VAD, 服务端仅接收有效语音片段。
+    """
+    from app.infrastructure.audio import get_asr_provider
+    asr = get_asr_provider()
+    text = asr.transcribe(audio_data, language=language)
+    return ToolResult(status="success", data={"text": text, "language": language})
+```
 
 ---
 
@@ -741,6 +923,73 @@ class PrimaryAgent(BaseAgent):
 | 分类器 (Haiku) | ~40ms | ~$0.000025 | $2.50 |
 | **节省** | **-96%** | **-99%** | **-$247.50** |
 
+### 3.3.5a 模态检测节点 (Modality Detector)
+
+**设计目标**: 在意图分类之前检测用户输入中是否包含非文本内容，决定是否激活多模态处理管线。
+
+```
+输入消息 → Modality Detector (规则引擎, <1ms)
+  │
+  ├── has_images? → 激活 Vision Pipeline
+  │   ├── 图片预处理 (压缩/安全检查) → Vision LLM 理解
+  │   └── 提取结构化信息注入 State
+  │
+  ├── has_audio? → 激活 Audio Pipeline
+  │   └── ASR 转写 → 文本注入 State
+  │
+  ├── has_document? → 激活 Document Pipeline
+  │   └── OCR 提取 → 结构化数据注入 State
+  │
+  └── text_only → 跳过, 直接进入意图分类
+
+检测规则:
+  - 图片: HumanMessage.content 中包含 {"type": "image_url", ...}
+  - 音频: 消息附带 audio_data 字段
+  - 文档: 用户表述含 "登机牌"/"行程单"/"证件" 且有图片
+```
+
+### 3.3.5b 多模态 Agent 设计
+
+**多模态 Agent 基类扩展**:
+```python
+class MultimodalAgent(BaseAgent):
+    """支持多模态输入的 Agent。扩展自 BaseAgent，增加视觉理解能力。"""
+
+    def __init__(self, runnable, vision_runnable=None, ...):
+        super().__init__(runnable, ...)
+        self.vision_runnable = vision_runnable  # 视觉 LLM runnable
+
+    def preprocess_multimodal(self, state: State) -> State:
+        """预处理多模态输入: 图片转结构化文本"""
+        last_msg = state["messages"][-1]
+        if has_image_content(last_msg):
+            # 1. 图片安全检查 (NSFW + PII)
+            # 2. 视觉 LLM 理解 → 文本描述
+            # 3. OCR 提取结构化字段
+            # 4. 注入到 State 中
+            vision_result = self.vision_runnable.invoke(last_msg)
+            state = inject_vision_context(state, vision_result)
+        return state
+
+    def invoke(self, state, config):
+        state = self.preprocess_multimodal(state)
+        return super().invoke(state, config)
+```
+
+### 3.3.5c 视觉 Agent 路由策略
+
+根据图片内容决定路由目标:
+
+| 图片类型 | 检测信号 | 路由目标 | 处理方式 |
+|---------|---------|---------|---------|
+| **登机牌照片** | OCR 检测到 "BOARDING PASS" / 航班号 + 日期 + 座位号 | `flight_agent` | 提取信息 → 自动填充改签/查询参数 |
+| **证件照片** | PII 检测到护照/身份证号码 | `primary_assistant` | 脱敏处理 → 身份验证 → 查询关联订单 |
+| **行程单截图** | 检测到出发/到达 + 日期 + 航班号组合 | `flight_agent` | 结构化提取 → 关联查询航班状态 |
+| **酒店预订截图** | 检测到酒店名 + 入住/退房日期 | `hotel_agent` | 提取信息 → 查询/修改预订 |
+| **错误页面截图** | 文本含 "error"/"失败"/"不可用" | `primary_assistant` | 故障诊断 → 降级建议 → 记录 Bug |
+| **旅游景点照片** | 自然场景 + 无文本 | `excursion_agent` | 地标识别 → 推荐相关行程 |
+| **通用图片** | 不匹配上述任何规则 | `primary_assistant` | 通用视觉理解 → 回答用户问题 |
+
 ### 3.3.6 Planner Agent (计划-执行分离)
 
 **适用范围**: 仅当请求涉及 3+ 领域或含依赖关系时触发。简单单领域请求不经过此路径。
@@ -814,7 +1063,32 @@ class State(TypedDict):
 START → load_user_memory → summarize
   │
   ▼
-intent_classifier (Haiku, 40ms)
+modality_detector (规则引擎, <1ms)
+  │
+  ├── has_images → image_preprocessor (压缩 + NSFW + PII 脱敏)
+  │       │
+  │       ▼
+  │   vision_analyzer (Vision LLM → 图片内容理解 + OCR 提取)
+  │       │
+  │       └──→ intent_classifier (继续)
+  │
+  ├── has_audio → audio_transcriber (ASR → 文本)
+  │       │
+  │       └──→ intent_classifier (继续)
+  │
+  └── text_only → intent_classifier
+        │
+        ▼
+  intent_classifier (Haiku, 40ms)
+    │
+    ├── single_domain (75%) ──→ 确定性路由 ──→ 对应子 Agent
+    │   (含 vision_single: 登机牌 → flight_agent 等)
+    │
+    ├── multi_domain (15%) ──→ Fan-out (Send API)
+    │
+    ├── complex (5%, 3+ domains) ──→ planner_agent ──→ executor
+    │
+    └── low_confidence ──→ fallback_llm_router
   │
   ├── single_domain (80%) ──→ 确定性路由 ──→ 对应子 Agent
   │
@@ -985,10 +1259,12 @@ HTTP 协议适配、流式输出、请求校验、Session 管理。不包含 Age
   DELETE /api/v1/users               # 批量删除
 
 多智能体对话:
-  POST   /api/v1/graph/chat          # 发起对话 (支持 SSE 流式)
+  POST   /api/v1/graph/chat          # 文本对话 (JSON)
+  POST   /api/v1/graph/chat/multimodal  # 多模态对话 (multipart/form-data: text + images[])
+  WS     /api/v1/graph/chat/voice    # 语音对话 (WebSocket + 流式音频)
   GET    /api/v1/graph/sessions      # 用户会话列表
   GET    /api/v1/graph/sessions/{id} # 会话详情
-  DELETE /api/v1/graph/sessions/{id} # 删除会话
+  DELETE /api/v1/graph/sessions/{id} # 删除会话 (级联删除关联图片/音频)
 
 系统:
   GET    /api/v1/health              # 健康检查
@@ -1001,10 +1277,57 @@ HTTP 协议适配、流式输出、请求校验、Session 管理。不包含 Age
 POST /api/v1/graph/chat
   → SSE events:
     event: thinking     → {agent, status}
+    event: modality     → {type: "image_analysis" | "ocr" | "audio_transcription", ...}  # 多模态
     event: tool_call    → {tool, args}
     event: interrupt    → {message, requires_confirmation}
     event: token        → {content}
-    event: done         → {session_id, cost}
+    event: done         → {session_id, cost, modalities_used: ["text", "image"]}
+```
+
+### 3.5.3a 多模态请求格式
+
+**JSON (base64 编码图片)**:
+```json
+{
+  "user_input": "帮我看下这张登机牌，我的航班是哪个登机口？",
+  "images": [
+    {
+      "data": "iVBORw0KGgoAAAANSUhEUgAA...",  // base64 编码的 WebP 图片
+      "mime_type": "image/webp",
+      "label": "登机牌照片"
+    }
+  ],
+  "stream": true
+}
+```
+
+**Multipart Form (二进制图片)**:
+```
+POST /api/v1/graph/chat/multimodal
+Content-Type: multipart/form-data
+
+--boundary
+Content-Disposition: form-data; name="user_input"
+查下这个航班有没有延误
+
+--boundary
+Content-Disposition: form-data; name="images"; filename="boarding_pass.jpg"
+Content-Type: image/jpeg
+(binary data)
+
+--boundary
+Content-Disposition: form-data; name="stream"
+true
+```
+
+**WebSocket (实时语音)**:
+```
+ws://host:8000/api/v1/graph/chat/voice
+→ 客户端发送: 二进制音频帧 (Opus 编码, 20ms 帧)
+→ 服务端返回: JSON 文本消息 {type: "transcription_interim", text: "帮我查..."}
+→ 服务端返回: JSON 文本消息 {type: "transcription_final", text: "帮我查下周三的航班"}
+→ 服务端返回: SSE 事件 (与文本对话相同)
+→ 服务端返回: JSON 音频帧 {type: "tts_audio", format: "opus", data: "base64..."}  # 可选 TTS
 ```
 
 ### 3.5.4 从 JWT 到 Runtime Context
@@ -1096,20 +1419,20 @@ PR → 离线评估 → 得分 >= 0.85 → 合并
 
 ```
 Layer 1: 快速确定性检查 (毫秒级)
-  工具: regex + Presidio
-  覆盖: PII 检测、敏感词过滤、格式校验
+  工具: regex + Presidio (文本) + NSFW 检测器 (图片) + 音频 VAD
+  覆盖: PII 检测、敏感词过滤、格式校验、图片 NSFW、音频静音检测
 
 Layer 2: 小模型分类 (百毫秒级)
-  工具: Llama Guard / NeMo self_check
-  覆盖: 内容安全、越狱检测、主题控制
+  工具: Llama Guard (文本+图片多模态版本) / NeMo self_check
+  覆盖: 内容安全、越狱检测、主题控制、图片敏感内容、音频违规内容
 
 Layer 3: Agent 执行护栏 (内嵌)
   工具: NeMo GuardrailsMiddleware (每个节点)
-  覆盖: 工具调用权限、参数校验
+  覆盖: 工具调用权限、参数校验、多模态内容访问控制
 
 Layer 4: 输出验证 (秒级)
-  工具: 幻觉检测 + 事实性校验
-  覆盖: 生成内容 vs 检索文档一致性
+  工具: 幻觉检测 + 事实性校验 + 视觉幻觉检测 (新增)
+  覆盖: 生成内容 vs 检索文档一致性、图片分析结果 vs OCR 文本一致性
 
 Layer 5: 人机协同 (最终防线)
   工具: LangGraph interrupt()
@@ -1133,9 +1456,25 @@ Layer 5: 人机协同 (最终防线)
 3. **引用验证**: 验证每个引用来源确实支撑对应声明
 4. **Token 级检测**: 逐 Token 标注有支撑/无支撑
 
+**视觉幻觉检测 (新增)**:
+```
+Layer V1: 视觉事实性
+  - 图片分析输出 vs OCR 提取的文本 → 交叉验证
+  - 例: Vision LLM 说 "登机口 A12", OCR 提取 "Gate B5" → 矛盾 → 阻断
+
+Layer V2: 视觉引用验证
+  - 分析结果中的每个字段是否可追溯到图片中的视觉元素
+  - 标注: "该信息来自图片的哪个区域"
+
+Layer V3: 多模态交叉验证
+  - 同一图片的不同 Vision 模型分析结果对比
+  - 分歧较大的字段 → 标注为低置信度
+```
+
 **设计要点**:
 - NLI 模型用于生产 (快速/准确/廉价)，LLM-as-Judge 用于高精度场景
 - 不确定时不回答 (Abstention) 优于给出错误答案
+- 视觉幻觉 = 最常见的多模态失败模式，必须优先检测
 
 ### 3.6.4 Prompt 版本化管理
 
@@ -1626,9 +1965,590 @@ Layer 3: 外部依赖 Mock → LLM 录制响应 + 向量检索录制结果
 
 ---
 
-# 第六部分: 非功能性架构
+# 第六部分: 多模态能力架构
 
-## 6.1 SLO 定义
+## 6.0 多模态定位与旅行场景
+
+### 6.0.1 为什么旅行助手需要多模态
+
+| 用户场景 | 纯文本痛点 | 多模态方案 |
+|---------|-----------|-----------|
+| **查登机牌信息** | 用户需手动输入航班号、日期、登机口 (6 个字段，易出错) | 拍照上传 → OCR 自动提取 → 一键查询 |
+| **确认证件信息** | 需手动输入护照号/身份证号 (PII 安全风险) | 拍照 → 脱敏提取 → 仅匹配数据库 (不存储明文) |
+| **行程单识别** | 旅行社发的行程单截图，需逐条手动录入 | 截图 → 结构化提取 → 自动填充航班+酒店查询 |
+| **故障报修** | 描述半天说不清楚错误页面 | 截图 → Vision LLM 理解错误 → 自动诊断 + 建议 |
+| **免手操作** | 开车/拎行李时无法打字 | 语音输入 → ASR 转写 → 正常对话流程 |
+| **地标识别** | "那个山上的白塔是什么景点" 难以文字描述 | 拍照 → 视觉识别 → 推荐行程 |
+
+### 6.0.2 模态支持优先级
+
+| 优先级 | 模态 | 延迟要求 | 成本影响 | 启用条件 |
+|--------|------|---------|---------|---------|
+| **P0** | 文本 (Text) | <8s | 低 | 始终启用 (当前) |
+| **P1** | 图片 (Image) | <5s (含 Vision LLM) | 中 (GPT-4o: $0.0025/图) | 用户上传图片时自动激活 |
+| **P1** | 语音输入 (Voice→Text) | <2s (ASR) | 低 (Whisper: $0.006/min) | 客户端请求语音模式时启用 |
+| **P2** | 语音输出 (Text→Voice) | <1s (TTS 首块) | 极低 (客户端免费 TTS) | 客户端支持时自动启用 |
+| **P3** | 视频 (Video) | — | 高 | 暂不启用 (旅行场景无强需求) |
+
+### 6.0.3 模态可插拔设计原则
+
+所有模态遵循 **能力声明 → 按需激活 → 不可用时优雅降级** 原则:
+
+```
+系统启动 → 检测可用模态:
+  ├── Vision LLM 可用? → 注册 image 模态
+  ├── ASR 服务可用?   → 注册 voice 模态
+  └── TTS 可用?       → 注册 audio_output 模态
+
+请求到达 → 检测请求模态:
+  ├── 请求含图片 且 image 模态已注册 → 激活 Vision Pipeline
+  ├── 请求含图片 但 image 模态不可用 → 告知 "图片功能暂时不可用, 请用文字描述"
+  └── 纯文本请求 → 正常处理 (无影响)
+```
+
+---
+
+## 6.1 多模态基础设施 (Layer 1)
+
+### 6.1.1 多模态 Provider 注册
+
+```
+app/infrastructure/
+  ├── llm/
+  │   ├── base.py           # AbstractLLMProvider (扩展 get_vision_model)
+  │   ├── openai.py         # OpenAIProvider (get_vision_model → gpt-4o)
+  │   ├── deepseek.py       # DeepSeekProvider
+  │   └── qwen_vl.py        # QwenVLProvider (新增, 本地/云端)
+  ├── audio/
+  │   ├── base.py           # AbstractASRProvider (transcribe)
+  │   ├── whisper_api.py    # OpenAI Whisper API
+  │   └── whisper_local.py  # faster-whisper 本地部署
+  ├── vision/
+  │   ├── preprocessor.py   # 图片预处理 (压缩/格式化/NSFW/PII)
+  │   └── safety.py         # NSFW 检测 + PII 脱敏
+  ├── vector/
+  │   ├── milvus.py         # 文本嵌入 (不变)
+  │   └── clip.py           # CLIP 多模态嵌入 (新增)
+  └── storage/
+      └── minio.py          # 扩展多模态 Bucket
+```
+
+### 6.1.2 多模态配置
+
+```python
+# app/core/config.py 新增字段
+class Settings(BaseSettings):
+    # === 多模态配置 ===
+
+    # 视觉模型
+    VISION_MODEL: str = "gpt-4o"         # 默认视觉模型
+    VISION_MODEL_BACKUP: str = "qwen-vl-max"  # 降级视觉模型
+    VISION_MODEL_MAX_TOKENS: int = 1024  # 视觉分析最大输出
+
+    # 图片处理
+    MAX_IMAGE_SIZE_MB: int = 20          # 单张图片大小上限
+    MAX_IMAGES_PER_REQUEST: int = 5      # 单次请求图片数上限
+    IMAGE_MAX_DIMENSION: int = 2048      # 图片最长边 (px)
+    IMAGE_FORMAT: str = "webp"           # 统一压缩格式
+    IMAGE_QUALITY: int = 85              # 压缩质量
+
+    # 语音
+    ASR_PROVIDER: str = "whisper_api"    # whisper_api | whisper_local
+    ASR_MODEL: str = "whisper-1"         # ASR 模型
+    ASR_LANGUAGE: str = "zh"             # 默认语言
+    TTS_PROVIDER: str = "client"         # client (浏览器) | edge | openai
+    TTS_VOICE: str = "zh-CN-XiaoxiaoNeural"  # 默认语音
+
+    # 多模态嵌入
+    CLIP_MODEL: str = "ViT-L/14"         # CLIP 模型
+    CLIP_EMBEDDING_DIM: int = 768        # 嵌入维度
+
+    # 图片安全
+    IMAGE_SAFETY_ENABLED: bool = True    # 是否启用图片安全检查
+    IMAGE_NSFW_THRESHOLD: float = 0.7    # NSFW 检测阈值
+```
+
+---
+
+## 6.2 多模态能力工具 (Layer 2)
+
+### 6.2.1 完整多模态工具目录
+
+```
+app/graph/tools/
+  ├── business/             # 业务工具 (不变)
+  ├── knowledge/            # 知识检索工具
+  │   └── multimodal_search.py  # 多模态 RAG 检索 (新增)
+  ├── vision/               # 视觉工具 (新增)
+  │   ├── analyze_image.py  # 通用图片理解 (Vision LLM)
+  │   ├── extract_document.py  # OCR 文档提取
+  │   ├── parse_boarding_pass.py  # 登机牌结构化解析
+  │   ├── recognize_landmark.py   # 地标识别
+  │   └── compare_screenshots.py  # 前后截图对比 (故障诊断)
+  ├── audio/                # 音频工具 (新增)
+  │   ├── transcribe.py     # 语音转文字 (ASR)
+  │   └── synthesize.py     # 文字转语音 (TTS, 服务端备用)
+  └── system/               # 系统工具 (不变)
+```
+
+### 6.2.2 登机牌解析工具 (核心多模态应用)
+
+```python
+@tool
+def parse_boarding_pass(
+    image_data: str,
+    runtime: ToolRuntime[UserContext, State],
+) -> ToolResult:
+    """
+    从登机牌图片中提取结构化航班信息。
+    这是最重要的多模态工具 — 旅行场景中 60% 的图片交互都是登机牌查询。
+
+    提取字段: 乘客姓名, 航班号, 出发/到达机场, 日期, 登机时间, 登机口, 座位号
+    """
+    # 1. 图片预处理
+    preprocessed = preprocess_image(image_data)
+
+    # 2. 视觉 LLM 理解 + structured output
+    vision_llm = runtime.context.llm_provider.get_vision_model()
+    prompt = """
+    从登机牌图片中提取以下字段。如果某个字段不可见，返回 null。
+    - passenger_name: 乘客姓名
+    - flight_number: 航班号 (如 CA1234)
+    - departure_airport: 出发机场代码 (如 PEK)
+    - arrival_airport: 到达机场代码 (如 ZRH)
+    - departure_date: 出发日期 (YYYY-MM-DD)
+    - boarding_time: 登机时间 (HH:MM)
+    - gate: 登机口
+    - seat: 座位号
+    """
+    result = vision_llm.invoke_with_image(preprocessed, prompt)
+
+    # 3. 交叉验证: OCR 文本 vs Vision 理解
+    ocr_text = ocr_extract(preprocessed)
+    cross_validate(result, ocr_text)  # 不一致 → 标记低置信度
+
+    # 4. 审计
+    _audit("parse_boarding_pass", runtime.context.user_id,
+           {"flight_number": result.flight_number})
+
+    return ToolResult(status="success", data=result.model_dump())
+```
+
+---
+
+## 6.3 多模态 Agent 设计 (Layer 3)
+
+### 6.3.1 多模态 Prompt 模板
+
+**Primary Agent 多模态 System Prompt 扩展**:
+```python
+PRIMARY_SYSTEM_PROMPT = """
+您是携程瑞士航空公司的多模态客户服务助理。
+
+【文本能力】
+- 搜索航班、酒店、租车、旅行信息
+- 帮助用户预订/改签/取消订单
+- 查询公司政策和常见问题
+
+【图片能力】
+- 识别登机牌照片 → 自动提取航班信息, 一键查询航班状态/改签
+- 识别证件照片 → 验证身份关联订单 (证件号会脱敏处理, 系统不存储)
+- 识别行程单截图 → 结构化提取行程, 自动填充查询参数
+- 识别错误页面截图 → 诊断问题, 提供解决方案
+- 识别旅游景点照片 → 推荐相关游玩项目
+
+【语音能力】  (如果用户启用了语音模式)
+- 接收语音输入, 自动转写为文字
+- 可用语音回复 (需要用户设备支持)
+
+【安全声明】
+- 所有上传的图片在分析后 30 天自动删除
+- 证件类图片中的敏感信息 (证件号、姓名) 会脱敏处理
+- 对话结束后可随时删除您上传的所有图片
+
+【当前用户信息】
+{user_info}
+
+当前时间: {time}
+"""
+```
+
+### 6.3.2 视觉 Agent 路由增强
+
+```python
+# app/graph/agents/classifier.py 扩展
+class IntentClassifier:
+    """意图分类器, 新增图片意图检测"""
+
+    IMAGE_INTENT_MAP = {
+        "boarding_pass": "flight",       # 登机牌 → 航班 Agent
+        "id_document": "primary",         # 证件 → 主 Agent (身份验证)
+        "itinerary": "flight",            # 行程单 → 航班 Agent
+        "hotel_booking": "hotel",         # 酒店预订截图 → 酒店 Agent
+        "error_screenshot": "primary",    # 错误截图 → 主 Agent (诊断)
+        "landmark": "excursion",          # 地标 → 旅行 Agent
+        "generic_image": "primary",       # 通用图片 → 主 Agent
+    }
+
+    def classify(self, state: State) -> dict:
+        # 1. 检测是否有图片
+        if has_images := self._detect_images(state):
+            # 2. 快速图片分类 (OCR + 轻量视觉特征)
+            image_type = self._classify_image_type(state["images"][0])
+            # 3. 路由到对应 Agent
+            intent = self.IMAGE_INTENT_MAP.get(image_type, "primary")
+            return {"intent": intent, "confidence": 0.90, "modality": "image"}
+
+        # 4. 文本意图分类 (不变)
+        return self._classify_text(state)
+```
+
+---
+
+## 6.4 多模态编排 (Layer 4)
+
+### 6.4.1 多模态 State 扩展
+
+```python
+class State(TypedDict):
+    # 原有字段 (不变)
+    messages: Annotated[list[AnyMessage], add_messages]
+    user_id: int
+    passenger_id: str
+    # ...
+
+    # 多模态扩展 (新增)
+    images: Annotated[list[ImageAttachment], operator.add]  # 当前轮次的图片
+    image_analysis: dict  # Vision LLM 分析结果
+    ocr_text: str         # OCR 提取的文本
+    modality_used: list[str]  # ["text", "image", "voice"]
+
+    # 图片元数据
+    image_attachments: Annotated[list[ImageMeta], operator.add]
+    # ImageMeta: {image_id, mime_type, size, safety_check_passed, pii_redacted}
+
+class ImageAttachment(TypedDict):
+    image_id: str         # UUID
+    data: str             # base64 编码的图片
+    mime_type: str        # image/webp
+    label: str | None     # 用户标注 (如 "登机牌")
+    preprocessed: bool    # 是否已预处理
+```
+
+### 6.4.2 多模态图节点定义
+
+```
+modality_detector (规则引擎, <1ms):
+  输入: State.messages[-1]
+  检测: HumanMessage.content 中是否有 image_url / audio 内容
+  输出: {modality: "text" | "image" | "voice" | "mixed"}
+
+image_preprocessor (<500ms):
+  输入: raw images
+  处理: 格式验证 → 压缩 → NSFW检测 → PII脱敏 → 生成缩略图
+  输出: ImageMeta[] + preprocessed_images
+
+vision_analyzer (<3s):
+  输入: preprocessed images + user query
+  处理: Vision LLM 理解 + OCR 提取
+  输出: image_analysis dict + ocr_text
+
+audio_transcriber (<2s):
+  输入: audio data
+  处理: ASR 转写
+  输出: transcribed text → 注入 State.messages
+
+intent_classifier (40ms):
+  增强: 图片意图分类 (登机牌→flight, 证件→primary, ...)
+```
+
+### 6.4.3 多模态混合对话流
+
+```
+用户: [上传登机牌照片] + "这班航班能改签到明天吗?"
+
+  modality_detector → "mixed" (image + text)
+    │
+    ├── image_preprocessor → NSFW通过, PII脱敏
+    ├── vision_analyzer → {flight_number: "CA1234", date: "2026-05-20", ...}
+    └── audio_transcriber → (skip, no audio)
+    │
+    ▼
+  intent_classifier:
+    图片检测: "boarding_pass" → intent="flight", confidence=0.92
+    文本检测: "改签航班" → intent="flight", confidence=0.88
+    综合: intent="flight" (image + text 一致)
+    │
+    ▼
+  flight_agent:
+    上下文: flight_number=CA1234, date=2026-05-20 (来自图片)
+    意图: 改签到明天 (2026-05-21)
+    操作: search_flights(CA1234, 2026-05-21) → 展示可选航班
+```
+
+---
+
+## 6.5 多模态 API 层 (Layer 5)
+
+### 6.5.1 多模态聊天端点
+
+```python
+# app/api/v1/graph.py
+
+@router.post("/chat/multimodal")
+async def graph_chat_multimodal(
+    user_input: str = Form(...),
+    images: list[UploadFile] = File(default=[]),
+    stream: bool = Form(default=False),
+    request: Request = None,
+    current_user: User = Depends(get_current_user),
+):
+    """
+    多模态对话 — 支持文本 + 图片 (multipart/form-data)。
+
+    限制:
+      - 最多 5 张图片
+      - 单张最大 20MB
+      - 仅支持 JPEG/PNG/WebP 格式
+    """
+    # 1. 验证图片
+    if len(images) > settings.MAX_IMAGES_PER_REQUEST:
+        raise ValidationError(f"最多上传 {settings.MAX_IMAGES_PER_REQUEST} 张图片")
+
+    # 2. 预处理图片 (压缩 + 安全检查)
+    processed_images = []
+    for img in images:
+        data = await img.read()
+        # 大小检查
+        if len(data) > settings.MAX_IMAGE_SIZE_MB * 1024 * 1024:
+            raise ValidationError(f"图片 {img.filename} 超过 {settings.MAX_IMAGE_SIZE_MB}MB 限制")
+        # 格式验证 + 压缩 + 安全检查
+        processed = await preprocess_image(data)
+        if not processed.safety_check_passed:
+            raise ValidationError("图片包含违规内容, 无法处理")
+        processed_images.append(processed)
+
+    # 3. 构建多模态消息
+    message_content = [{"type": "text", "text": user_input}]
+    for img in processed_images:
+        message_content.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:{img.mime_type};base64,{img.base64_data}"}
+        })
+
+    # 4. 调用编排层
+    graph = get_graph()
+    human_msg = HumanMessage(content=message_content)
+    # ... (流式/非流式处理逻辑同 /chat)
+```
+
+---
+
+## 6.6 多模态治理与安全 (Layer 6)
+
+### 6.6.1 图片输入安全检测流程
+
+```
+用户上传图片
+  │
+  ▼
+[格式验证] (ms 级)
+  - 魔数检测 (JPEG: FF D8, PNG: 89 50 4E 47, WebP: 52 49 46 46)
+  - 扩展名 vs 实际格式一致?
+  - 大小 ≤ 20MB, 尺寸 ≤ 4096×4096
+  │ 失败 → 拒绝 (400)
+  ▼
+[NSFW 检测] (200ms)
+  - 模型: nudenet / OpenNSFW / safety-checker
+  - 阈值: >0.7 → 拒绝 (422 "图片包含不当内容")
+  │ 失败 → 拒绝
+  ▼
+[PII 检测] (500ms)
+  - OCR 提取所有文本
+  - Presidio 检测: 身份证号, 护照号, 手机号, 邮箱, 银行卡号
+  - 脱敏: 替换为 [REDACTED] 或模糊处理图片区域
+  │
+  ▼
+[存入 processed/ bucket] → 后续 Vision LLM 分析使用脱敏后的图片
+```
+
+### 6.6.2 视觉幻觉检测
+
+```python
+def detect_visual_hallucination(
+    vision_result: dict,  # Vision LLM 输出
+    ocr_text: str,         # OCR 提取的文本
+    image_id: str,
+) -> HallucinationReport:
+    """
+    交叉验证 Vision LLM 的输出与 OCR 文本。
+
+    常见视觉幻觉:
+      - LLM 说 "登机口 A12" 但图片上写的是 "Gate B5"
+      - LLM 说 "航班号 CA1234" 但图片上是 "MU5678"
+      - LLM 自称看到了图片中没有的文字
+    """
+    claims = extract_claims(vision_result)
+    report = HallucinationReport()
+
+    for claim in claims:
+        # 在 OCR 文本中搜索证据
+        evidence = fuzzy_search(claim, ocr_text)
+        if evidence.score < 0.7:
+            report.add_hallucination(
+                claim=claim,
+                severity="high" if evidence.score < 0.3 else "medium",
+                suggestion=f"OCR 文本中未找到 '{claim.text}', 可能是幻觉"
+            )
+
+    return report
+```
+
+### 6.6.3 多模态安全审计
+
+```
+audit_multimodal_events 表 (MySQL 月分区):
+  event_type: "image_upload" | "image_analysis" | "audio_transcribe"
+  user_id, passenger_id,
+  resource_id: image_id / audio_id,
+  safety_result: JSON (NSFW score, PII detected, redacted fields),
+  vision_result_hash: SHA256 (用于后续复核),
+  cost: {model, tokens, amount},
+  timestamp
+```
+
+---
+
+## 6.7 多模态处理管线
+
+### 6.7.1 图片处理管线
+
+```
+[客户端] 拍照/选择图片
+  │
+  ├── 客户端预处理 (可选, 减少带宽):
+  │   压缩至 2048px, WebP 格式, 质量 85%
+  │   客户端人脸模糊 (推荐)
+  │
+  ▼
+[API Gateway] 接收 multipart/form-data
+  │
+  ▼
+[Image Preprocessor] (同步, <500ms):
+  1. 格式验证 (magic bytes)
+  2. 尺寸调整 (max 2048px)
+  3. 格式统一 (→ WebP, quality 85%)
+  4. NSFW 检测 (nudenet, 200ms)
+  5. PII 检测 + OCR (Presidio, 300ms)
+  6. 生成缩略图 (256px, 用于对话预览)
+  │
+  ├── [同步路径] Vision LLM 分析 (<3s):
+  │   使用脱敏后的图片调用 Vision LLM
+  │   → 图片内容理解
+  │   → 结构化信息提取 (登机牌/证件)
+  │   → 注入 Agent State
+  │
+  └── [异步路径] 原始图片归档:
+      存入 MinIO raw/ bucket
+      设置 TTL: 30 天后自动删除
+```
+
+### 6.7.2 语音处理管线
+
+```
+[客户端] 浏览器麦克风
+  │
+  ├── VAD (语音活动检测): 检测到语音开始 → 开始录制
+  ├── Opus 编码: 压缩音频 (20ms 帧)
+  └── WebSocket → 发送音频流
+
+[服务端] WebSocket Handler:
+  │
+  ├── 接收音频帧 → 缓冲区
+  ├── VAD 端点检测: 静音 500ms → 认为一句话结束
+  ├── 发送音频片段 → ASR 引擎
+  │
+  ▼
+[ASR 引擎] (<2s):
+  ├── Whisper API (OpenAI): 高精度, 按分钟计费
+  └── faster-whisper (本地): 零成本, 需 GPU
+  │
+  ▼
+[转写结果] → 注入 State.messages → 正常对话流程
+
+[TTS 输出] (可选, 客户端):
+  ├── 浏览器 Web Speech API: 免费, 中文自然
+  └── Edge TTS: 微软语音合成, 高质量中文
+```
+
+---
+
+## 6.8 多模态 RAG
+
+### 6.8.1 图文联合检索架构
+
+```
+用户查询: "登机牌长什么样?"
+
+  ├── 文本嵌入 (text-embedding-3-small) → Milvus text_vectors Collection
+  │   返回: 政策文档中关于 "登机牌" 的文本描述 (Top-10)
+  │
+  ├── 多模态嵌入 (CLIP ViT-L/14) → Milvus image_vectors Collection
+  │   返回: 文档中的登机牌示例图片 (Top-5)
+  │
+  └── RRF 融合 (k=60):
+      text_rank × 0.6 + image_rank × 0.4 → Top-5 综合结果
+      返回: 文字说明 + 示例图片
+```
+
+### 6.8.2 图片分块与嵌入
+
+```
+文档 → 解析器 (PDF/Office/HTML)
+  │
+  ├── 文本部分: 按现有策略分块 → text-embedding → Milvus text_vectors
+  │
+  └── 图片部分: 提取嵌入图片
+      ├── 生成图片描述 (Vision LLM, 异步批量)
+      ├── CLIP 嵌入 (图片+文本联合)
+      └── 元数据: {parent_doc_id, page_number, caption, surrounding_text}
+           → Milvus image_vectors
+
+检索时:
+  匹配到的图片 → 返回 {image_url, caption, source_doc, page_number}
+  前端渲染: 图片 + 来源标注 + 上下文文本
+```
+
+### 6.8.3 多模态 RAG 工具
+
+```python
+@tool
+def search_multimodal(
+    query: str,
+    modalities: list[str] = ["text", "image"],
+    top_k: int = 5,
+) -> ToolResult:
+    """
+    多模态 RAG 检索 — 同时搜索文本和图片。
+    """
+    results = {"text": [], "images": []}
+
+    if "text" in modalities:
+        text_embedding = get_text_embedding(query)
+        results["text"] = milvus_text.search(text_embedding, top_k=top_k)
+
+    if "image" in modalities:
+        clip_embedding = get_clip_embedding(query)
+        results["images"] = milvus_images.search(clip_embedding, top_k=top_k)
+
+    return ToolResult(status="success", data=results)
+```
+
+---
+
+# 第七部分: 非功能性架构
+
+## 7.1 SLO 定义
 
 ### 6.1.1 服务等级目标
 
@@ -1657,7 +2577,7 @@ Layer 3: 外部依赖 Mock → LLM 录制响应 + 向量检索录制结果
 预算耗尽 → 冻结发布 → 优先稳定性修复
 ```
 
-## 6.2 故障模式分析 (FMEA)
+## 7.2 故障模式分析 (FMEA)
 
 ### 6.2.1 组件故障影响矩阵
 
@@ -1680,7 +2600,7 @@ Level 2: 无 LLM (仅缓存 + 规则)
 Level 3: 仅人机客服
 ```
 
-## 6.3 容量规划模型
+## 7.3 容量规划模型
 
 ### 6.3.1 50TB 规模推算
 
@@ -1708,7 +2628,7 @@ Level 3: 仅人机客服
 | LLM API 速率 | 限流 | 退避次数 >10/min | 增加 API Key 或降级模型 |
 | MinIO 存储 | 60% | >80% | 增加节点 |
 
-## 6.4 多租户隔离架构
+## 7.4 多租户隔离架构
 
 ### 6.4.1 逐层隔离验证
 
@@ -1727,7 +2647,7 @@ Level 3: 仅人机客服
 - 检查点 (Checkpoint) 按 thread_id 隔离，不同用户的 thread_id 天然不同
 - 缓存 key 必须包含 user_id 前缀，防止跨用户缓存污染
 
-## 6.5 数据隐私合规
+## 7.5 数据隐私合规
 
 ### 6.5.1 PII 检测与脱敏
 
@@ -1752,7 +2672,7 @@ Level 3: 仅人机客服
 - LLM API 调用确保数据不出境 (使用国内 API 端点)
 - 日志和审计数据不包含原始 PII
 
-## 6.6 用户体验度量
+## 7.6 用户体验度量
 
 | 指标 | 定义 | 目标 |
 |------|------|------|
@@ -1763,11 +2683,77 @@ Level 3: 仅人机客服
 | **满意度** | 赞/(赞+踩) | >80% |
 | **弃聊率** | 中途放弃比例 | <15% |
 
+## 7.7 多模态非功能性需求
+
+### 7.7.1 多模态 SLO
+
+| 服务 | 可用性 | P95 延迟 | 说明 |
+|------|--------|---------|------|
+| **图片分析 (Vision LLM)** | 99.5% | <3s | 单张图片内容理解 |
+| **图片预处理 (压缩/格式化)** | 99.9% | <500ms | 客户端或服务端预处理 |
+| **语音转写 (ASR)** | 99.5% | <2s (首 Token) | Whisper API 或本地模型 |
+| **语音合成 (TTS)** | 99.5% | <1s (首音频块) | 客户端优先, 服务端备用 |
+| **OCR 文档提取** | 99.0% | <5s | 复杂文档 (多页 PDF/图片) |
+| **多模态 RAG 检索** | 99.5% | <1s | CLIP 嵌入 + Milvus 搜索 |
+| **图像安全检查 (NSFW/PII)** | 99.9% | <200ms | 上传即检测, 异步确认 |
+
+### 7.7.2 多模态降级路径
+
+```
+Level 0: 全模态 (Text + Image + Voice)
+Level 1: Text + Image (Voice 不可用 → 纯文本输入)
+Level 2: Text Only (Vision LLM 不可用 → 告知 "图片功能暂不可用, 请用文字描述")
+Level 3: 仅人机客服 (所有 AI 模态不可用)
+```
+
+### 7.7.3 多模态成本模型
+
+| 模态 | 模型 | 成本/单位 | 月预估 (10K 活跃用户) |
+|------|------|---------|---------------------|
+| **文本** | DeepSeek-Chat | $0.14 / 1M tokens | ~$500 |
+| **视觉** | GPT-4o (图片) | $0.00255 / 图片 (1024×1024) | ~$765 (30% 请求含图片) |
+| **视觉** | Qwen-VL-Max (迁移后) | ¥0.003 / 千 tokens | ~¥2000 (~$280) |
+| **语音 ASR** | Whisper API | $0.006 / 分钟 | ~$180 (10% 请求用语音) |
+| **语音 TTS** | Edge TTS (客户端) | 免费 | $0 |
+| **嵌入 (文本)** | text-embedding-3-small | $0.02 / 1M tokens | ~$200 |
+| **嵌入 (多模态)** | CLIP ViT-L/14 | GPU 自托管或 $0.02/1M tokens | ~$300 |
+
+**综合月成本预估**: $1,500-2,500 (15% 多模态流量 + 85% 纯文本)
+
+### 7.7.4 多模态容量规划
+
+| 资源 | 计算 | 峰值需求 |
+|------|------|---------|
+| **Vision LLM 并发** | 30% 请求含 1-3 张图片, P95 3s | 50 并发 → 150 TPS 峰值预留 |
+| **图片存储 (MinIO)** | 平均 500KB/张, 10K 用户 × 5 张/天 × 365 | ~9TB/年, HOT 层保留 30 天 (~750GB) |
+| **音频存储 (审计)** | 平均 50KB/条 (ogg 压缩), 10K × 2 条/天 | ~365GB/年, COLD 归档 |
+| **多模态嵌入维度** | CLIP ViT-L: 768 维 × 4 bytes = 3KB/向量 | 100M 图片嵌入 ≈ 300GB 向量存储 |
+
+### 7.7.5 多模态隐私合规
+
+| 要求 | 实现 |
+|------|------|
+| **图片 PII 检测** | 上传时 Presidio 扩展检测 + OCR 提取文本后脱敏；护照/身份证/登机牌号码自动模糊处理 |
+| **人脸保护** | 客户端预模糊 (推荐) 或服务端 MediaPipe 人脸检测 → 高斯模糊 |
+| **音频保留策略** | 仅保留转写文本；原始音频保留 7 天后删除 (合规审计用途除外) |
+| **图片保留策略** | 对话结束后 30 天自动删除；用户可主动删除 (`DELETE /api/v1/graph/sessions/{id}` 级联删除关联图片) |
+| **数据不出境** | 视觉 LLM 优先使用国内 API 端点 (Qwen-VL)；Whisper 使用本地部署版本 |
+
+### 7.7.6 多模态 FMEA 扩展
+
+| 故障 | 爆炸半径 | 降级路径 |
+|------|---------|---------|
+| **Vision LLM API 不可用** | 所有图片理解请求 | 告知用户 "图片功能暂时不可用, 请用文字描述"；OCR 仍可提取文字 |
+| **ASR 服务不可用** | 所有语音输入 | 降级为文本输入；提示用户切换输入方式 |
+| **NSFW 检测服务不可用** | 图片上传 | 所有图片请求降级为 "仅 OCR 提取文字", 不进行视觉理解 |
+| **MinIO 不可用** | 图片/音频无法存储 | 内存暂存当前会话图片 (限制 5 张 / 20MB)；历史图片不可用 |
+| **CLIP 嵌入服务不可用** | 多模态 RAG 检索 | 降级为纯文本 RAG 检索 (图片元数据 + OCR 文本) |
+
 ---
 
-# 第七部分: 风险治理与迁移路线图
+# 第八部分: 风险治理与迁移路线图
 
-## 7.1 技术风险登记册
+## 8.1 技术风险登记册
 
 | # | 风险 | 概率 | 影响 | 缓解措施 | 降级方案 |
 |---|------|------|------|---------|---------|
@@ -1779,8 +2765,13 @@ Level 3: 仅人机客服
 | R6 | 提示词版本管理混乱 | 中 | 中 | PromptHub + commit hash 锁定 | 代码内管理 (回退) |
 | R7 | 护栏误拦导致用户体验差 | 中 | 中 | 严重度分级; 黄灯放行+记录; A/B 测试 | 降低护栏严格度 |
 | R8 | 知识冲突引发错误回答 | 高 | 中 | 冲突检测 + 权威性排序 + 人工审核 | 返回多版本供用户判断 |
+| R9 | 视觉 LLM 幻觉导致错误分析 | 高 | 高 | OCR × Vision 交叉验证; 低置信度拒绝回答 | 降级为纯文本 + 告知用户图片分析不可用 |
+| R10 | 图片 PII 泄露 (证件照明文存储) | 中 | 高 | 上传即脱敏; 人脸模糊; 30 天 TTL | 拦截所有证件类图片, 仅接受登机牌 |
+| R11 | 语音识别准确率不足 (方言/噪音) | 中 | 中 | 置信度过滤; 低置信度转写标注不确定; 降级文本输入 | 提示用户切换文本输入 |
+| R12 | 多模态 API 成本失控 | 中 | 中 | Token 预算扩展到多模态 (图片按分辨率折算); 月度预算告警 | 高峰期降级为 GPT-4o-mini 或关闭图片功能 |
+| R13 | NSFW 检测误拦正常内容 | 低 | 中 | 阈值可调; 黄灯机制 (标记而非阻断); A/B 测试 | 放行 + 人工复核 |
 
-## 7.2 现状 vs 目标差距矩阵
+## 8.2 现状 vs 目标差距矩阵
 
 | 维度 | 当前状态 | 目标状态 | 差距 | 优先级 |
 |------|---------|---------|------|--------|
@@ -1803,8 +2794,14 @@ Level 3: 仅人机客服
 | **知识生命周期** | 无 | 七阶段闭环 | 新增 | P3 |
 | **HA** | 无 | Patroni + ProxySQL + Sentinel | 新增 | P3 |
 | **监控** | 无 | Prometheus + Grafana + OTel | 新增 | P3 |
+| **多模态输入** | 无 (纯文本) | 图片上传 + 语音输入 | 新增 | P1 |
+| **视觉理解** | 无 | Vision LLM (GPT-4o → Qwen-VL) | 新增 | P1 |
+| **语音管线** | 无 | ASR (Whisper) + TTS (客户端) | 新增 | P1 |
+| **多模态安全** | 无 | 图片 NSFW + PII 脱敏 + 视觉幻觉检测 | 新增 | P1 |
+| **多模态 RAG** | 无 | CLIP 嵌入 + 图文联合检索 | 新增 | P2 |
+| **前端多模态** | 无 | 图片上传预览 + 语音按钮 + 多模态渲染 | 新增 | P1 |
 
-## 7.3 分阶段迁移路线图
+## 8.3 分阶段迁移路线图
 
 ### Phase 0: 紧急修复 (1-2 天)
 
@@ -1945,29 +2942,84 @@ Level 3: 仅人机客服
 | P10.5 | PII 脱敏全链路验证 |
 | P10.6 | 用户数据删除/导出 API |
 
-**预计总工期**: Phase 0-6 核心交付 18-25 天, Phase 7-10 完整交付 38-51 天
+### Phase 10a: 多模态基础能力 (6-8 天)
+
+| 步骤 | 内容 | 优先级 |
+|------|------|--------|
+| M1.1 | `app/core/config.py` 增加多模态配置字段 (视觉模型/图片参数/语音参数) | P1 |
+| M1.2 | `AbstractLLMProvider` 扩展 `get_vision_model()` 接口 | P1 |
+| M1.3 | `OpenAIProvider` 实现 `get_vision_model()` → GPT-4o | P1 |
+| M1.4 | `VisionPreprocessor` 实现 (格式验证/压缩/尺寸调整) | P1 |
+| M1.5 | `ImageSafetyChecker` 实现 (NSFW 检测 + PII 脱敏) | P1 |
+| M1.6 | MinIO 多模态 Bucket 创建 (images/raw, images/processed, images/thumbnails, audio/) | P1 |
+| M1.7 | `app/api/v1/graph/chat/multimodal` 端点 (multipart/form-data) | P1 |
+| M1.8 | 前端 `ImagePreview` + `ChatInput` 图片上传组件 | P1 |
+| M1.9 | 前端 `MessageBubble` 多模态内容渲染 | P1 |
+
+### Phase 10b: 多模态 Agent 集成 (5-7 天)
+
+| 步骤 | 内容 | 优先级 |
+|------|------|--------|
+| M2.1 | `ModalityDetector` 节点 (规则引擎, 检测图片/音频/文本) | P1 |
+| M2.2 | `vision_analyzer` 节点 (Vision LLM 理解 + OCR) | P1 |
+| M2.3 | `parse_boarding_pass` 工具 (登机牌结构化提取) | P1 |
+| M2.4 | `analyze_image` 工具 (通用图片理解) | P1 |
+| M2.5 | `extract_document_text` 工具 (OCR 文档提取) | P1 |
+| M2.6 | `IntentClassifier` 扩展图片意图 (登机牌→flight, 证件→primary, ...) | P1 |
+| M2.7 | Primary Agent 多模态 System Prompt 更新 | P1 |
+| M2.8 | `MultimodalAgent` 基类 (预处理钩子) | P2 |
+
+### Phase 10c: 语音能力 (4-5 天)
+
+| 步骤 | 内容 | 优先级 |
+|------|------|--------|
+| M3.1 | `AbstractASRProvider` + `WhisperAPIProvider` 实现 | P1 |
+| M3.2 | WebSocket `/api/v1/graph/chat/voice` 端点 | P1 |
+| M3.3 | `audio_transcriber` 节点 (ASR 转写 → 注入 State) | P1 |
+| M3.4 | `transcribe_audio` 工具 | P2 |
+| M3.5 | 前端 `VoiceInput.vue` 组件 (VAD + Opus + WebSocket) | P1 |
+| M3.6 | 客户端 TTS 集成 (Web Speech API / Edge TTS) | P2 |
+
+### Phase 10d: 多模态 RAG + 安全深度 (5-7 天)
+
+| 步骤 | 内容 | 优先级 |
+|------|------|--------|
+| M4.1 | CLIP 嵌入服务部署 (本地 GPU 或 API) | P2 |
+| M4.2 | Milvus `image_vectors` Collection 创建 | P2 |
+| M4.3 | `search_multimodal` 工具 (图文联合检索) | P2 |
+| M4.4 | 视觉幻觉检测 (OCR × Vision 交叉验证) | P1 |
+| M4.5 | 多模态安全审计表 (`audit_multimodal_events`) | P2 |
+| M4.6 | 图片保留策略 (TTL 30 天, 用户可删除) | P2 |
+| M4.7 | 多模态 E2E 测试 (上传登机牌 → 自动查询航班) | P1 |
+
+**多模态预计工期**: M1-M4 总计 20-27 天 (与核心 Phase 0-10 部分并行)
+
+**预计总工期**: Phase 0-6 核心交付 18-25 天, Phase 7-10 完整交付 38-51 天, 多模态 M1-M4 额外 20-27 天
 
 ---
 
-# 第八部分: 部署与运维
+# 第九部分: 部署与运维
 
-## 8.1 Docker Compose 拓扑
+## 9.1 Docker Compose 拓扑
 
 ```yaml
 services:
-  nginx:       # 反向代理 (80/443)
-  app:         # FastAPI (8000)
+  nginx:       # 反向代理 (80/443, WebSocket 支持 for 语音)
+  app:         # FastAPI (8000) — 多模态 API
   mysql:       # MySQL 8.0 (3306) — 业务数据
   postgres:    # PostgreSQL 16 (5432) — Agent 记忆
   redis:       # Redis 7 (6379) — 缓存 + 限流 + 队列
-  qdrant:      # Qdrant (6333) — 向量存储 (≤10TB)
+  qdrant:      # Qdrant (6333) — 文本向量存储 (≤10TB)
   # Phase 7 扩展:
   # milvus-proxy, milvus-querynode × 8, milvus-datanode × 3
   # milvus-indexnode × 2, etcd, pulsar
   # minio × 8 (分布式)
+  # Phase 10a 多模态扩展:
+  whisper:     # faster-whisper (本地 ASR, GPU 可选)
+  clip:        # CLIP 嵌入服务 (GPU Node, Phase 10d)
 ```
 
-## 8.2 高可用拓扑
+## 9.2 高可用拓扑
 
 ```
 FastAPI (K8s, HPA: 3-20 Pods)
@@ -1978,7 +3030,7 @@ FastAPI (K8s, HPA: 3-20 Pods)
   └── Milvus: 3 副本
 ```
 
-## 8.3 监控告警体系
+## 9.3 监控告警体系
 
 ### 8.3.1 可观测性栈
 
@@ -2000,7 +3052,7 @@ Traces   → Tempo → Grafana (分布式追踪, OTel)
 | 向量搜索 P95 >1s | 5min | Warning |
 | 缓存命中率 <30% | 10min | Warning |
 
-## 8.4 测试体系
+## 9.4 测试体系
 
 ```
         ┌─────────┐
@@ -2060,6 +3112,14 @@ Traces   → Tempo → Grafana (分布式追踪, OTel)
 | `opentelemetry-instrumentation-fastapi` | 追踪 | P7 |
 | `nemoguardrails` | 护栏 | P8 |
 | `presidio-analyzer` | PII 检测 | P8 |
+| `presidio-image-redactor` | 图片 PII 脱敏 | M1 |
+| `Pillow` | 图片处理 (压缩/格式转换) | M1 |
+| `python-multipart` | multipart/form-data 解析 | M1 |
+| `openai-whisper` 或 `faster-whisper` | 语音转写 (本地) | M3 |
+| `opuslib` | Opus 音频编解码 | M3 |
+| `websockets` | WebSocket 语音支持 | M3 |
+| `nudenet` 或 `transformers[safety]` | 图片 NSFW 检测 | M1 |
+| `openai-clip` 或 `transformers[clip]` | CLIP 多模态嵌入 | M4 |
 
 ### 移除
 
@@ -2078,6 +3138,10 @@ Traces   → Tempo → Grafana (分布式追踪, OTel)
 | **API 框架** | FastAPI | REST + WebSocket |
 | **Agent 框架** | LangGraph | StateGraph 多智能体 |
 | **LLM** | OpenAI / DeepSeek | 问答 + 工具选择 |
+| **视觉 LLM** | GPT-4o / Qwen-VL-Max | 图片内容理解 + OCR |
+| **语音 ASR** | Whisper (API) / faster-whisper (本地) | 语音转文字 |
+| **语音 TTS** | Web Speech API / Edge TTS / OpenAI TTS | 文字转语音 |
+| **多模态嵌入** | CLIP ViT-L/14 / Chinese-CLIP | 图文联合检索 |
 | **向量存储** | Qdrant / Milvus | RAG 检索 |
 | **业务数据库** | MySQL 8.0 | 用户/航班/酒店/审计 |
 | **Agent 记忆** | PostgreSQL 16 | Checkpoint + Store |
@@ -2103,9 +3167,9 @@ Traces   → Tempo → Grafana (分布式追踪, OTel)
 
 ---
 
-# 第九部分: 前端架构设计
+# 第十部分: 前端架构设计
 
-## 9.1 技术栈
+## 10.1 技术栈
 
 | 技术 | 版本 | 用途 |
 |------|------|------|
@@ -2118,8 +3182,12 @@ Traces   → Tempo → Grafana (分布式追踪, OTel)
 | marked + DOMPurify | ^15 / ^3.2 | Markdown 渲染 + XSS 防护 |
 | Lucide Vue Next | ^0.460 | 图标库 |
 | fetch-event-source | ^2.0 | SSE 流式连接 |
+| @ricky0123/vad-web | ^0.x | 客户端语音活动检测 (VAD) |
+| opus-media-recorder | ^0.x | Opus 编码录音 |
+| compressorjs | ^1.x | 客户端图片压缩 |
+| dompurify | ^3.x | XSS 防护 (含图片 SVG 过滤) |
 
-## 9.2 路由设计
+## 10.2 路由设计
 
 ```
 /                  → ChatPage       (需登录)
@@ -2131,7 +3199,7 @@ Traces   → Tempo → Grafana (分布式追踪, OTel)
     /admin/documents   → Documents  (文档管理)
 ```
 
-## 9.3 组件树
+## 10.3 组件树
 
 ```
 App.vue
@@ -2164,7 +3232,7 @@ App.vue
     └── Documents.vue → 上传区 + 文档列表
 ```
 
-## 9.4 状态管理 (Pinia)
+## 10.4 状态管理 (Pinia)
 
 **authStore**:
 ```
@@ -2189,7 +3257,7 @@ newSession()                (新建会话)
 selectSession()             (切换会话)
 ```
 
-## 9.5 数据流
+## 10.5 数据流
 
 ```
 SSE 流式对话:
@@ -2211,7 +3279,7 @@ Session 管理:
   ChatPage beforeMount: 检查 isAuthenticated → 否则 redirect /login
 ```
 
-## 9.6 SSE 流式处理
+## 10.6 SSE 流式处理
 
 ```
 fetch() → ReadableStream reader
@@ -2222,7 +3290,7 @@ fetch() → ReadableStream reader
   → AbortController 支持取消
 ```
 
-## 9.7 预订卡片设计
+## 10.7 预订卡片设计
 
 Agent 返回的预订结果渲染为可视化卡片:
 
@@ -2232,7 +3300,7 @@ Agent 返回的预订结果渲染为可视化卡片:
 
 **CarRentalCard**: 绿色左边框, 汽车图标, 租车公司, 地点, 起止日期
 
-## 9.8 管理后台
+## 10.8 管理后台
 
 **Dashboard**: 5 个统计卡片 (用户数/对话数/Token/费用/日活)
 
@@ -2242,7 +3310,7 @@ Agent 返回的预订结果渲染为可视化卡片:
 
 **Documents**: RAG 文档管理 (上传区/文档列表/状态/操作)
 
-## 9.9 部署
+## 10.9 部署
 
 **开发环境**: Vite dev server (:5173) → proxy /api → FastAPI (:8000)
 
@@ -2253,7 +3321,128 @@ Nginx:
   /           → frontend/dist/   (静态文件)
   /api/       → app:8000         (FastAPI 后端)
   /api/graph/chat → SSE 支持    (proxy_buffering off)
+  ws://       → app:8000         (WebSocket 语音)
 ```
+
+### 10.10 多模态 UI 组件
+
+#### 10.10.1 图片上传组件
+
+```
+ChatInput.vue 扩展:
+  ├── 文本输入 (原有, auto-resize)
+  ├── 📎 附件按钮:
+  │   ├── 上传图片 (点击 → 文件选择器)
+  │   │   支持: 拍照 / 相册 / 拖拽上传
+  │   │   限制: 最多 5 张, 单张 ≤20MB, JPEG/PNG/WebP
+  │   ├── 语音按钮 (长按录音)
+  │   └── 发送按钮
+  └── 上传预览区:
+      显示已选图片缩略图 (256px), 可删除单张
+```
+
+**ImagePreview.vue** (新增):
+```
+图片缩略图网格:
+  ├── 图片缩略图 (128px, object-fit: cover)
+  ├── 删除按钮 (×)
+  ├── 上传进度条 (上传中)
+  └── 安全检查状态: ✓ 通过 / ⚠️ 脱敏 / ✗ 拒绝
+```
+
+**MessageBubble.vue 扩展 — 图片消息**:
+```
+用户消息气泡:
+  ├── 文本内容 (如有)
+  └── 图片展示:
+      ├── 缩略图 (256px) → 点击展开大图 (Lightbox)
+      └── 图片标签: "登机牌" / "证件" / "行程单" (AI 自动识别)
+```
+
+#### 10.10.2 语音输入组件
+
+**VoiceInput.vue** (新增):
+```
+语音按钮 UI:
+  ├── 默认状态: 🎤 灰色图标
+  ├── 按压中: 🎤 红色脉冲动画 + "正在聆听..."
+  ├── 处理中: ⏳ "识别中..."
+  └── 完成: 转写文本显示在输入框
+
+技术实现:
+  ├── MediaRecorder API (浏览器原生)
+  ├── VAD: @ricky0123/vad-web (客户端语音活动检测)
+  ├── Opus 编码: 降低带宽
+  ├── WebSocket: ws://host/api/v1/graph/chat/voice
+  └── 降级: WebSocket 不可用 → 回退到 HTTP multipart 上传录音文件
+```
+
+#### 10.10.3 AI 回复中的多模态内容渲染
+
+**MessageBubble.vue 扩展 — 多模态回复渲染**:
+```
+AI 回复中可能包含:
+  ├── Markdown 文本 (原有)
+  ├── 预订卡片 (原有: FlightCard, HotelCard, CarRentalCard)
+  ├── 图片引用 (新增):
+  │   [image:boarding_pass_sample_01] → 渲染为可点击的示例图片
+  ├── 置信度指示器 (新增):
+  │   文字分析: 🟢 高置信度
+  │   图片分析: 🟡 中置信度 (OCR 与 Vision 结果不完全一致)
+  │   建议: 人工核实关键信息
+  └── 多模态分析结果卡片 (新增):
+      VisionAnalysisCard: 结构化展示图片分析结果
+      例: 登机牌识别 → {航班号, 日期, 登机口, 座位号} 表格展示
+```
+
+#### 10.10.4 客户端图片预处理
+
+```typescript
+// utils/imagePreprocessor.ts
+export async function preprocessImage(file: File): Promise<ProcessedImage> {
+  // 1. 格式验证
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error('不支持的图片格式');
+  }
+
+  // 2. 大小检查
+  if (file.size > 20 * 1024 * 1024) {
+    throw new Error('图片大小不能超过 20MB');
+  }
+
+  // 3. 客户端压缩 (Canvas API)
+  const compressed = await compressImage(file, {
+    maxDimension: 2048,
+    format: 'webp',
+    quality: 0.85,
+  });
+
+  // 4. 生成缩略图 (256px)
+  const thumbnail = await compressImage(file, {
+    maxDimension: 256,
+    format: 'webp',
+    quality: 0.7,
+  });
+
+  return { compressed, thumbnail };
+}
+```
+
+#### 10.10.5 前端多模态数据流
+
+```
+SSE 流式对话 (多模态扩展):
+  用户上传图片 + 输入文本
+    → ChatInput.vue → preprocessImage() (客户端压缩)
+    → POST /api/v1/graph/chat/multimodal (multipart/form-data)
+    → chatStore.addMessage(user msg with images[])
+    → SSE events:
+      event: modality → {type: "image_analysis", status: "analyzing"}
+      event: tool_call → {tool: "parse_boarding_pass", ...}
+      event: token → {content: "您的登机牌信息如下..."}
+      event: done → {session_id, modalities_used: ["text", "image"]}
+    → MessageBubble 渲染: 文本 + VisionAnalysisCard
 
 ---
 
