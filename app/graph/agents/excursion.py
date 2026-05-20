@@ -12,9 +12,15 @@ from langchain_core.runnables import RunnableConfig
 
 from app.graph.agents.base import BaseAgent, GuardrailResult
 from app.graph.agents.prompts.excursion import book_excursion_prompt
-from graph_chat.base_data_model import CompleteOrEscalate
-from graph_chat.llm_tavily import llm
-from tools.trip_tools import search_trip_recommendations, book_excursion, update_excursion, cancel_excursion
+from app.graph.models import CompleteOrEscalate
+from app.graph.tools.business.excursions import search_trip_recommendations, book_excursion, update_excursion, cancel_excursion
+from app.infrastructure.llm.base import LLMProviderFactory
+from app.infrastructure.llm import deepseek as _
+from app.core.config import settings
+
+logger = logging.getLogger(__name__)
+
+llm = LLMProviderFactory.create(settings.LLM_PROVIDER).get_chat_model()
 
 logger = logging.getLogger(__name__)
 

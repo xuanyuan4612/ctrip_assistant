@@ -116,6 +116,11 @@ class Settings(BaseSettings):
     EMBEDDING_DIMENSIONS: int = 768                  # 向量维度，影响检索精度和存储
 
     # ══════════════════════════════════════════
+    #  Tavily（联网搜索）
+    # ══════════════════════════════════════════
+    TAVILY_API_KEY: SecretStr = Field(default=SecretStr(""), description="Tavily search API key")
+
+    # ══════════════════════════════════════════
     #  Qdrant（向量数据库）
     # ══════════════════════════════════════════
     QDRANT_URL: str = "http://localhost:6333"    # Qdrant 服务地址

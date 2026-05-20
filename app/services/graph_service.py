@@ -164,7 +164,7 @@ class GraphService:
             # 配置 LangGraph 运行参数
             # thread_id：用于 checkpoint 持久化对话状态
             # user_context：注入到 Agent 的用户信息（Agent 通过 context 读取）
-            config = {"configurable": {"thread_id": thread_id, "user_context": context}}
+            config = {"configurable": {"thread_id": thread_id, "user_context": context, "passenger_id": passenger_id}}
 
             # 第三步：分支执行
             if user_input.strip().lower() == "y":
